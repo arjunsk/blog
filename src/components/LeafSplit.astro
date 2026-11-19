@@ -3,13 +3,10 @@ import { sitePath } from '../site';
 ---
 <leaf-split data-engine={sitePath('leaf-split.wasm')}>
   <figure class="split">
-    <div class="split-top">
-      <figcaption>
-        <p class="eyebrow">Interactive figure</p>
-        <h2>Split a leaf page</h2>
-      </figcaption>
+    <figcaption class="split-top">
+      <h2>Split a leaf page</h2>
       <span class="engine">Rust · WASM</span>
-    </div>
+    </figcaption>
 
     <div class="split-inputs" data-controls hidden>
       <span>Key to insert</span>
@@ -174,36 +171,98 @@ import { sitePath } from '../site';
 </script>
 
 <style is:global>
-  leaf-split { display: block; margin: 2.5rem 0 3.1rem; }
-  .split { margin: 0; padding: clamp(1rem, 3.5vw, 2rem); border-radius: 1rem; color: #e9f1df; background: #123b2f; }
-  .split-top, .split-inputs, .split-controls, .split .transport, .split .key-options { display: flex; align-items: center; gap: .55rem; }
+  leaf-split { display: block; margin: 2rem 0 2.5rem; }
+
+  .split {
+    margin: 0;
+    padding: clamp(1rem, 3.5vw, 1.5rem);
+    border: 1px solid var(--border);
+    border-radius: .5rem;
+    background: var(--surface);
+  }
+
+  .split-top, .split-inputs, .split-controls, .split .transport, .split .key-options {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .55rem;
+  }
+
   .split [hidden] { display: none; }
-  .split-top { justify-content: space-between; gap: 1rem; margin-bottom: 1.15rem; }
-  .split .eyebrow { color: #abcca8; margin: 0; }
-  .split h2 { margin: .1rem 0 0; font-size: clamp(1.75rem, 5vw, 2.45rem); }
-  .split .engine { color: #dceba5; flex-shrink: 0; font: .72rem var(--mono); }
-  .split-inputs { gap: .8rem; margin-bottom: .9rem; color: #c6ddc5; font-size: .875rem; }
-  .split button { cursor: pointer; padding: .43rem .65rem; color: #edf3e7; background: #234d3e; border: 1px solid #71927b; border-radius: .32rem; font: 600 .875rem var(--sans); }
-  .split button:hover:not(:disabled) { background: #37604d; }
-  .split button[aria-pressed="true"], .split .play { background: #d0e99b; color: #19392c; border-color: #d0e99b; }
-  .split button[aria-pressed="true"]:hover, .split .play:hover:not(:disabled) { background: #e5f3c6; }
-  .split button:disabled { opacity: .48; cursor: default; }
-  .split button:focus-visible, .split input:focus-visible { outline: 2px solid #e5f3c6; outline-offset: 3px; }
-  .split .stage { display: grid; place-items: center; min-height: 12.75rem; border: 1px solid #557260; border-radius: .5rem; padding: .85rem .3rem; background: radial-gradient(#94b39c45 1px, transparent 1px) center / 16px 16px, #183e33; }
+  .split-top { justify-content: space-between; margin-bottom: 1.15rem; }
+  .split h2 { margin: 0; font-size: 1.15rem; font-weight: 650; }
+  .split .engine { color: var(--muted); font: .8rem var(--mono); }
+  .split-inputs { gap: .75rem; margin-bottom: .85rem; color: var(--muted); font-size: .875rem; }
+
+  .split button {
+    cursor: pointer;
+    min-height: 2.125rem;
+    padding: .35rem .65rem;
+    color: var(--text);
+    background: var(--raised);
+    border: 1px solid var(--control-border);
+    border-radius: .28rem;
+    font: 550 .875rem var(--sans);
+  }
+
+  .split button:hover:not(:disabled) { border-color: var(--accent); }
+  .split button[aria-pressed="true"], .split .play {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+  }
+
+  .split button[aria-pressed="true"]:hover, .split .play:hover { background: #d6e7ff; }
+  .split button:disabled { opacity: .45; cursor: default; }
+
+  .split .stage {
+    display: grid;
+    place-items: center;
+    min-height: 11rem;
+    border: 1px solid var(--border);
+    border-radius: .35rem;
+    padding: .75rem .3rem;
+    background: var(--page);
+  }
+
   .split .leaf, .split .root { display: grid; justify-items: center; gap: .4rem; }
-  .split .node-label { color: #d6e8d3; background: #183e33; padding: 0 .2rem; font: 500 .7rem var(--mono); text-transform: uppercase; letter-spacing: .03em; }
+  .split .node-label { color: var(--muted); font: .75rem var(--mono); }
   .split .keys { display: flex; gap: .18rem; }
-  .split .key { display: grid; place-items: center; width: clamp(1.65rem, 4vw, 2.6rem); height: 2.2rem; border: 1px solid #789a82; border-radius: .28rem; color: #e9f3df; background: #245341; font: 500 .86rem var(--mono); }
-  .split .key.highlight { background: #d0e99b; color: #19392c; border-color: #d0e99b; animation: split-appear .3s ease both; }
+  .split .key {
+    display: grid;
+    place-items: center;
+    width: clamp(1.65rem, 4vw, 2.5rem);
+    height: 2.15rem;
+    border: 1px solid var(--control-border);
+    border-radius: .25rem;
+    color: var(--text);
+    background: var(--raised);
+    font: 550 .85rem var(--mono);
+  }
+
+  .split .key.highlight {
+    color: var(--accent-ink);
+    background: var(--accent);
+    border-color: var(--accent);
+    animation: split-appear .3s ease both;
+  }
   .split .tree { display: grid; justify-items: center; width: min(100%, 27rem); }
   .split .leaves { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-  .split .branches { position: relative; width: 50%; height: 1.15rem; margin-top: .75rem; border-inline: 1px solid #819f85; border-top: 1px solid #819f85; }
-  .split .branches::before { content: ''; position: absolute; left: 50%; bottom: 100%; height: .8rem; width: 1px; background: #819f85; }
-  .split .step-copy { margin: 1rem 0; min-height: 4rem; }
-  .split .step-copy p { margin: .2rem 0 0; color: #ccdfcd; font-size: .94rem; }
-  .split-controls { justify-content: space-between; flex-wrap: wrap; border-top: 1px solid #557260; padding-top: .9rem; }
+  .split .branches {
+    position: relative;
+    width: 50%;
+    height: 1.15rem;
+    margin-top: .75rem;
+    border-inline: 1px solid var(--control-border);
+    border-top: 1px solid var(--control-border);
+  }
+
+  .split .branches::before { content: ''; position: absolute; left: 50%; bottom: 100%; height: .8rem; width: 1px; background: var(--control-border); }
+  .split .step-copy { margin: .9rem 0; min-height: 4rem; }
+  .split .step-copy p { margin: .2rem 0 0; color: var(--muted); font-size: .94rem; }
+  .split-controls { justify-content: space-between; border-top: 1px solid var(--border); padding-top: .85rem; }
   .split .scrubber { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; font: .75rem var(--mono); }
-  .split .scrubber input { width: 6rem; accent-color: #d0e99b; }
+  .split .scrubber input { width: 6rem; accent-color: var(--accent); }
   .split-status:empty { display: none; }
   @keyframes split-appear { from { opacity: .5; transform: translateY(3px); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .split .key.highlight { animation: none; } }

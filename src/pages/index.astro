@@ -1,42 +1,43 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import TreePreview from '../components/TreePreview.astro';
 import { formatDate, projects, sitePath } from '../site';
 
 const posts = (await getCollection('posts')).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const latest = posts[0];
 ---
-<Base title="Arjun — Systems notes and projects" description="Arjun's portfolio and technical notes on databases, data structures, and small systems." section="home">
-  <section class="hero">
-    <p class="eyebrow">Arjun · Portfolio &amp; blog</p>
-    <h1>Systems, from the<br class="hero-break" /> <em>inside out.</em></h1>
-    <p class="hero-intro">I build small versions of bigger systems to understand how they work. Here are my projects and notes on databases, data structures, and the code underneath.</p>
-    <div class="hero-actions">
-      <a class="primary-link" href={sitePath('posts/')}>Read the blog</a>
-      <a class="plain-link" href={sitePath('#projects')}>Browse projects</a>
-    </div>
-  </section>
+<Base title="Arjun — Systems notes and projects" description="Arjun's notes and projects on databases, data structures, and small systems.">
+  <header class="page-heading">
+    <h1>Systems notes</h1>
+    <p>Notes and projects on databases, data structures, and small systems.</p>
+  </header>
 
-  {posts[0] && <section class="featured" aria-labelledby="latest-title">
-    <div class="featured-text">
-      <p class="eyebrow">Latest post · {posts[0].data.topic}</p>
-      <h2 id="latest-title"><a href={sitePath(`posts/${posts[0].id}/`)}>{posts[0].data.title}</a></h2>
-      <p>{posts[0].data.summary}</p>
-      <time datetime={posts[0].data.date.toISOString().slice(0, 10)}>{formatDate(posts[0].data.date)}</time>
-    </div>
-    {posts[0].id === 'b-plus-tree-leaf-split' && <TreePreview />}
-  </section>}
-
-  <section class="projects" id="projects" aria-labelledby="projects-title">
-    <h2 id="projects-title">Selected projects</h2>
-    <div class="project-list">
+  <section class="content-section" id="projects" aria-labelledby="projects-title">
+    <h2 id="projects-title">Projects</h2>
+    <ul class="reading-list">
       {projects.map(project => (
-        <article class="project">
-          <p class="eyebrow">{project.tags}</p>
-          <h3><a href={project.url}>{project.name}</a></h3>
-          <p>{project.description}</p>
-        </article>
+        <li class="reading-row">
+          <div>
+            <h3><a href={project.url}>{project.name}</a></h3>
+            <p>{project.description}</p>
+          </div>
+        </li>
       ))}
-    </div>
+    </ul>
   </section>
+
+  {latest && (
+    <section class="content-section" aria-labelledby="latest-title">
+      <h2 id="latest-title">Latest post</h2>
+      <div class="reading-list">
+        <article class="reading-row">
+          <div>
+            <h3><a href={sitePath(`posts/${latest.id}/`)}>{latest.data.title}</a></h3>
+            <p>{latest.data.summary}</p>
+          </div>
+          <time datetime={latest.data.date.toISOString().slice(0, 10)}>{formatDate(latest.data.date)}</time>
+        </article>
+      </div>
+    </section>
+  )}
 </Base>
