@@ -5,7 +5,7 @@ import { formatDate, getVisiblePosts, projects, sitePath } from '../site';
 const posts = (await getVisiblePosts()).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 const latest = posts[0];
 ---
-<Base title="Arjun — Systems notes and projects" description="Arjun's notes and projects on databases, data structures, and small systems.">
+<Base title="Systems notes and projects" description="Notes and projects on databases, data structures, and small systems.">
   <header class="page-heading">
     <h1>Systems notes</h1>
     <p>Notes and projects on databases, data structures, and small systems.</p>

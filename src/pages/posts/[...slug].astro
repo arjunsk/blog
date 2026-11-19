@@ -40,7 +40,7 @@ const { Content, headings } = await render(post);
 const outline = headings.filter(({ depth }) => depth === 2 || depth === 3);
 const { title, summary, date, topic } = post.data;
 ---
-<Base title={`${title} — Arjun`} description={summary} section="blog" wide>
+<Base title={title} description={summary} section="blog" wide>
   <div class="post-layout">
     <aside class="chapter-rail" aria-label="Chapter navigation">
       <details class="rail-panel" data-post-menu open>

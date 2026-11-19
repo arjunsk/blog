@@ -1,4 +1,4 @@
-# Arjun's portfolio and blog
+# AutoInc
 
 A static Astro site with MDX posts and an interactive B+ tree visualization. TypeScript manages playback and the diagram, while a small Rust/WebAssembly module inserts keys and determines the split.
 

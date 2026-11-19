@@ -1,5 +1,7 @@
 import { getCollection } from 'astro:content';
 
+export const siteName = 'AutoInc';
+
 export function sitePath(path = '') {
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   return `${base}/${path.replace(/^\//, '')}`;

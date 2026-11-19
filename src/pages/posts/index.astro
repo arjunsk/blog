@@ -4,7 +4,7 @@ import { formatDate, getVisiblePosts, sitePath } from '../../site';
 
 const posts = (await getVisiblePosts()).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
-<Base title="Blog — Arjun" description="Technical notes on databases and data structures, with interactive examples." section="blog">
+<Base title="Blog" description="Technical notes on databases and data structures, with interactive examples." section="blog">
   <header class="page-heading">
     <h1>Blog</h1>
     <p>Notes on the internals of databases and the data structures they depend on.</p>
