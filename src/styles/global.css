@@ -54,7 +54,18 @@ h1, h2, h3, p { overflow-wrap: break-word; }
 }
 
 .site-header a { text-decoration: none; }
-.brand { font-weight: 650; }
+.brand { display: inline-flex; align-items: center; }
+.brand img { display: block; }
+
+@media (min-width: 56rem) {
+  .site-header .brand {
+    position: absolute;
+    inset-inline-start: clamp(1.25rem, 3vw, 3rem);
+    inset-block-start: 1.06rem;
+  }
+
+  .site-header nav { margin-inline-start: auto; }
+}
 .site-header nav { display: flex; flex-wrap: wrap; align-items: center; gap: clamp(.85rem, 4vw, 1.5rem); }
 .site-header nav a { color: var(--muted); font-size: .9rem; }
 .site-header nav a:hover, .site-header nav [aria-current] { color: var(--text); text-decoration: underline; }
