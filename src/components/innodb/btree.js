@@ -1,39 +1,8 @@
-/* btree.js — ① B+ Tree with cascading splits */
-(function () {
-  const section = document.getElementById('btree');
-  section.innerHTML = `
-    <h2><span class="no">①</span>B+ Tree</h2>
-    <p class="lead">Every InnoDB table is a <b>clustered B+Tree</b>: leaf pages hold the rows (sorted by primary key), leaves are linked left-to-right for range scans, and internal pages route lookups to the right leaf. When a leaf fills, InnoDB splits it and promotes a separator key to the parent — cascading all the way up to the root.</p>
+import { select } from 'd3-selection';
+import { installArrowDefs } from './arrow-defs.js';
 
-    <div class="controls">
-      <input id="bt-key" type="number" placeholder="key"
-             style="background:var(--bg);border:1px solid var(--border-2);color:var(--ink);padding:7px 10px;border-radius:5px;width:90px;font-family:'JetBrains Mono',monospace;font-size:12px">
-      <button class="btn primary" data-act="insert">Insert</button>
-      <button class="btn"          data-act="insert5">Insert 5 random</button>
-      <button class="btn"          data-act="insert20">Insert 20 random</button>
-      <button class="btn"          data-act="reset">↺ Reset</button>
-      <span style="margin-left:auto;color:var(--ink-dim);font-size:12px">
-        max / leaf: <code>3</code> · max / internal: <code>4</code>
-      </span>
-    </div>
-
-    <div class="viz-container" style="padding:24px">
-      <svg id="bt-svg" viewBox="0 0 960 420" style="width:100%;height:auto"></svg>
-    </div>
-
-    <div class="two-col" style="margin-top:20px">
-      <div>
-        <h3>What just happened</h3>
-        <div id="bt-log" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--ink-2);line-height:1.6;padding:6px 0;border-top:1px dotted var(--border-2)">Insert keys above to build the tree. Low capacities are used so splits happen quickly.</div>
-      </div>
-      <div>
-        <h3>The two insert paths</h3>
-        <p style="font-size:13px"><b style="color:var(--ok)">Optimistic:</b> <code>btr_cur_optimistic_insert</code> — target leaf has space. One mtr, one latch, done.</p>
-        <p style="font-size:13px"><b style="color:var(--warn)">Pessimistic:</b> <code>btr_cur_pessimistic_insert</code> — leaf is full. Allocate new page, split records, promote a separator key to parent. May cascade.</p>
-      </div>
-    </div>
-    <p class="ref"><code>storage/innobase/btr/btr0cur.cc</code> · <code>page/page0cur.cc</code></p>
-  `;
+export function mountBtree(section) {
+  const figure = select(section);
 
   // ---- B+Tree state ----
   let pageCounter = 0;
@@ -111,16 +80,14 @@
   }
 
   // ---- handlers ----
-  function log(html) { d3.select('#bt-log').html(html); }
-  function handleInsert(k, silent) {
-    if (!Number.isFinite(k)) { if (!silent) log('Enter a numeric key.'); return; }
+  function log(html) { figure.select('[data-status]').html(html); }
+  function handleInsert(k) {
+    if (!Number.isFinite(k)) { log('Enter a numeric key.'); return; }
     const r = rawInsert(k);
-    if (!silent) {
-      if (r === 'dup')        log(`Key <b>${k}</b> already exists.`);
-      else if (r === 'ok')    log(`Inserted <b>${k}</b> via <b style="color:var(--ok)">optimistic</b> path — leaf had space.`);
-      else if (r === 'split') log(`Inserted <b>${k}</b>, leaf full — <b style="color:var(--warn)">pessimistic split</b>, promoted separator to parent.`);
-      else if (r === 'new-root') log(`Inserted <b>${k}</b>, root split — tree depth grew.`);
-    }
+    if (r === 'dup')        log(`Key <b>${k}</b> already exists.`);
+    else if (r === 'ok')    log(`Inserted <b>${k}</b> via <b style="color:var(--ok)">optimistic</b> path — leaf had space.`);
+    else if (r === 'split') log(`Inserted <b>${k}</b>, leaf full — <b style="color:var(--warn)">pessimistic split</b>, promoted separator to parent.`);
+    else if (r === 'new-root') log(`Inserted <b>${k}</b>, root split — tree depth grew.`);
     render();
   }
 
@@ -130,9 +97,9 @@
   // arrows route through a dedicated band BELOW the leaves so they never cross
   // the parent-child connectors above.
   function render() {
-    const svg = d3.select('#bt-svg');
+    const svg = figure.select('[data-diagram]');
     svg.selectAll('*').remove();
-    installArrowDefs(svg);
+    const arrows = installArrowDefs(svg);
 
     // ===== Build levels =====
     const levels = [];
@@ -144,7 +111,6 @@
     // ===== Layout constants =====
     // Tuned smaller so deep / wide trees don't crowd. Nodes are compact
     // (84×34 by default), with smaller fonts that scale further down for tight rows.
-    const VB_W           = 960;
     const PAD_X          = 32;
     const PAD_TOP        = 44;
     const PAD_BOTTOM     = 24;
@@ -157,6 +123,7 @@
 
     const leaves    = levels[levels.length - 1];
     const numLeaves = leaves.length;
+    const VB_W      = Math.max(640, 2 * PAD_X + numLeaves * MIN_W + (numLeaves - 1) * MIN_GAP);
     const usable    = VB_W - 2 * PAD_X;
 
     // Pick leaf width / gap so they fit horizontally
@@ -175,6 +142,7 @@
 
     // ===== Adapt the viewBox height to the depth + linked-list band =====
     const VB_H = PAD_TOP + (levels.length - 1) * LEVEL_GAP + NODE_H + LEAF_LINK_DIP + PAD_BOTTOM;
+    section.style.setProperty('--tree-min-width', `${Math.round(VB_W * .7)}px`);
     svg.attr('viewBox', `0 0 ${VB_W} ${VB_H}`);
 
     // ===== Position nodes (centers in _cx,_cy) =====
@@ -231,7 +199,7 @@
          .attr('d', `M${ax},${ay} C${ax + 14},${dipY} ${bx - 14},${dipY} ${bx},${by}`)
          .attr('stroke', 'var(--accent)').attr('stroke-width', 1.5)
          .attr('fill', 'none').attr('opacity', 0.9)
-         .attr('marker-end', 'url(#arrow-head-acc)');
+         .attr('marker-end', arrows.flow);
     }
 
     // ===== Nodes (drawn on top) =====
@@ -266,15 +234,15 @@
 
   // ---- bindings ----
   section.querySelector('[data-act="insert"]').addEventListener('click', () => {
-    const v = parseInt(section.querySelector('#bt-key').value, 10);
-    handleInsert(v); section.querySelector('#bt-key').value = '';
+    const v = parseInt(section.querySelector('[data-key]').value, 10);
+    handleInsert(v); section.querySelector('[data-key]').value = '';
   });
-  section.querySelector('[data-act="insert5"]').addEventListener('click',  () => { for (let i=0;i<5;i++)  handleInsert(1 + Math.floor(Math.random()*99),  true); render(); log('Inserted 5 random keys.'); });
-  section.querySelector('[data-act="insert20"]').addEventListener('click', () => { for (let i=0;i<20;i++) handleInsert(1 + Math.floor(Math.random()*999), true); render(); log('Inserted 20 random keys.'); });
+  section.querySelector('[data-act="insert5"]').addEventListener('click',  () => { for (let i=0;i<5;i++)  rawInsert(1 + Math.floor(Math.random()*99)); render(); log('Inserted 5 random keys.'); });
+  section.querySelector('[data-act="insert20"]').addEventListener('click', () => { for (let i=0;i<20;i++) rawInsert(1 + Math.floor(Math.random()*999)); render(); log('Inserted 20 random keys.'); });
   section.querySelector('[data-act="reset"]').addEventListener('click',    () => { reset(); log('Tree reset.'); render(); });
-  section.querySelector('#bt-key').addEventListener('keydown', (e) => { if (e.key === 'Enter') section.querySelector('[data-act="insert"]').click(); });
+  section.querySelector('[data-key]').addEventListener('keydown', (e) => { if (e.key === 'Enter') section.querySelector('[data-act="insert"]').click(); });
 
   // seed
   [20, 35, 50].forEach(k => rawInsert(k));
   render();
-})();
+}

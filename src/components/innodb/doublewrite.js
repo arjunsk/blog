@@ -1,26 +1,11 @@
-/* doublewrite.js — ⑨ Doublewrite: torn-write protection on the page-flush path */
-(function () {
-  const section = document.getElementById('doublewrite');
-  if (!section) return;
-  section.innerHTML = `
-    <h2><span class="no">⑨</span>Doublewrite — protecting pages from torn writes</h2>
-    <p class="lead">Before any dirty page leaves the buffer pool for its real home, InnoDB writes a copy to a sequential, fsync'd staging area called the <b>doublewrite buffer</b>. If a crash leaves the home page torn (half old, half new), recovery rebuilds it from the pristine copy. Without this, redo replay would land on a structurally invalid page.</p>
+import { select } from 'd3-selection';
+import { installArrowDefs } from './arrow-defs.js';
+import 'd3-transition';
 
-    <h3>Why redo alone is not enough</h3>
-    <p>A 16 KB InnoDB page is written to disk atomically <em>only if</em> the filesystem + block device + OS happen to cooperate. In reality, a crash mid-flush can leave a torn page: the 16 KB is half old, half new. Redo can't fix that — it's a <em>logical</em> change stream that assumes the page it replays on is structurally intact (valid header, checksum, record directory).</p>
-    <p>Doublewrite is the durability shim: every dirty page is first written to a contiguous, sequential area (<code>#ib_16384_0.dblwr</code> / <code>#ib_16384_1.dblwr</code> since 8.0.20; in <code>ibdata1</code> before that) and <code>fsync</code>'d. Only then is it written to its real home in the tablespace. On recovery, if any page looks torn, InnoDB reads the pristine copy from doublewrite and rewrites it — then redo can safely apply.</p>
-    <div class="controls">
-      <button class="btn primary" data-act="dw-step">Step ▶</button>
-      <button class="btn"          data-act="dw-play">▶ Auto play</button>
-      <button class="btn"          data-act="dw-crash">⚡ Crash now</button>
-      <button class="btn"          data-act="dw-reset">↺ Reset</button>
-    </div>
-    <div class="viz-container" style="padding:24px">
-      <svg id="dw-svg" viewBox="0 0 1200 520" style="width:100%;height:auto"></svg>
-    </div>
-    <div class="inspector" id="dw-log">Step through to see doublewrite protect against torn writes.</div>
-    <p class="ref"><code>buf/buf0dblwr.cc</code> · tuned by <code>innodb_doublewrite</code>, <code>innodb_doublewrite_pages</code></p>
-  `;
+export function mountDoublewrite(section) {
+  const figure = select(section);
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const motionTime = milliseconds => reducedMotion.matches ? 0 : milliseconds;
 
   // ===== Doublewrite =====
   // step semantics:
@@ -43,13 +28,25 @@
   }
 
   let dwTimer = null;
+  const play = section.querySelector('[data-act="dw-play"]');
+
+  function stopPlayback() {
+    clearInterval(dwTimer);
+    dwTimer = null;
+    play.textContent = 'Auto play';
+  }
+
   section.querySelector('[data-act="dw-step"]').addEventListener('click', () => { dwAdvance(); renderDw(); });
-  section.querySelector('[data-act="dw-play"]').addEventListener('click', () => {
-    if (dwTimer) { clearInterval(dwTimer); dwTimer = null; return; }
+  play.addEventListener('click', () => {
+    if (dwTimer !== null) {
+      stopPlayback();
+      return;
+    }
+    play.textContent = 'Pause';
     dwTimer = setInterval(() => {
       const before = dw.step;
       dwAdvance(); renderDw();
-      if (dw.step === before) { clearInterval(dwTimer); dwTimer = null; }
+      if (dw.step === before) stopPlayback();
     }, 1300);
   });
   section.querySelector('[data-act="dw-crash"]').addEventListener('click', () => {
@@ -58,12 +55,12 @@
     renderDw();
   });
   section.querySelector('[data-act="dw-reset"]').addEventListener('click', () => {
-    if (dwTimer) { clearInterval(dwTimer); dwTimer = null; }
-    dwReset(); d3.select('#dw-log').html('— reset —'); renderDw();
+    stopPlayback();
+    dwReset(); figure.select('[data-status]').html('— reset —'); renderDw();
   });
 
   function renderDw() {
-    const svg = d3.select('#dw-svg'); svg.selectAll('*').remove(); installArrowDefs(svg);
+    const svg = figure.select('[data-diagram]'); svg.selectAll('*').remove(); const arrows = installArrowDefs(svg);
     const g = svg.append('g');
 
     const X = 16, W = 1168;
@@ -73,7 +70,7 @@
       const r = g.append('rect').attr('x', x).attr('y', y).attr('width', w).attr('height', h).attr('rx', 8)
          .attr('fill', 'var(--panel-2)').attr('stroke', color).attr('stroke-width', active ? 2 : 1)
          .attr('opacity', 0);
-      r.transition().duration(220).attr('opacity', 1);
+      r.transition().duration(motionTime(220)).attr('opacity', 1);
       g.append('text').attr('x', x + 14).attr('y', y + 22).attr('class', 'lbl-mono')
         .attr('fill', color).attr('font-size', 12).text(title);
       if (sub) {
@@ -87,7 +84,7 @@
         const cx = x + 15 + i * (cellW + 10);
         const rect = g.append('rect').attr('x', cx).attr('y', y + h - 28).attr('width', cellW).attr('height', 18).attr('rx', 3)
           .attr('fill', c.bg).attr('stroke', c.color).attr('opacity', 0);
-        rect.transition().duration(220).attr('opacity', 1);
+        rect.transition().duration(motionTime(220)).attr('opacity', 1);
         g.append('text').attr('x', cx + cellW / 2).attr('y', y + h - 14).attr('text-anchor', 'middle')
           .attr('class', 'lbl-mono').attr('font-size', 11).attr('fill', c.color).text(c.t);
       });
@@ -97,16 +94,16 @@
       const path = g.append('path').attr('d', `M${x},${y0} L${x},${y1}`).attr('fill', 'none')
         .attr('stroke', color).attr('stroke-width', 2)
         .attr('stroke-dasharray', len).attr('stroke-dashoffset', len);
-      path.transition().duration(450).attr('stroke-dashoffset', 0);
+      path.transition().duration(motionTime(450)).attr('stroke-dashoffset', 0);
       g.append('path').attr('d', `M${x - 6},${y1 - 8} L${x},${y1} L${x + 6},${y1 - 8} Z`)
         .attr('fill', color).attr('opacity', 0)
-        .transition().delay(420).duration(180).attr('opacity', 1);
+        .transition().delay(motionTime(420)).duration(motionTime(180)).attr('opacity', 1);
       const my = (y0 + y1) / 2;
       g.append('text').attr('x', x + 14).attr('y', my - 4).attr('class', 'lbl-mono')
         .attr('fill', color).attr('font-size', 13).attr('opacity', 0)
-        .text(n).transition().delay(220).duration(220).attr('opacity', 1);
+        .text(n).transition().delay(motionTime(220)).duration(motionTime(220)).attr('opacity', 1);
       g.append('text').attr('x', x + 30).attr('y', my - 4).attr('class', 'lbl-mono-dim').attr('font-size', 11)
-        .attr('opacity', 0).text(label).transition().delay(220).duration(220).attr('opacity', 1);
+        .attr('opacity', 0).text(label).transition().delay(motionTime(220)).duration(motionTime(220)).attr('opacity', 1);
     }
 
     const bpY  = 16,  bpH  = 80;
@@ -125,7 +122,7 @@
       ]);
     } else {
       g.append('text').attr('x', X + W / 2).attr('y', bpY + bpH / 2 + 6).attr('text-anchor', 'middle')
-        .attr('class', 'lbl-mono-dim').attr('font-size', 11).text('— click Next step ▶ to dirty a page —');
+        .attr('class', 'lbl-mono-dim').attr('font-size', 11).text('— click Step to dirty a page —');
     }
 
     if (stepNow >= 2) {
@@ -194,7 +191,7 @@
           .attr('fill', reached ? 'rgba(74,242,118,0.07)' : 'var(--panel)')
           .attr('stroke', c).attr('stroke-width', isCur ? 2 : 1)
           .attr('opacity', 0);
-        card.transition().duration(220).attr('opacity', 1);
+        card.transition().duration(motionTime(220)).attr('opacity', 1);
         g.append('text').attr('x', cardX + 12).attr('y', cardY + 22).attr('class', 'lbl-mono')
           .attr('fill', c).attr('font-size', 14).text(s.n);
         g.append('text').attr('x', cardX + 36).attr('y', cardY + 22).attr('class', 'lbl-mono')
@@ -211,31 +208,31 @@
           const ay = cardY + cardH / 2;
           const a = g.append('path').attr('d', `M${cardX + stepW - 18},${ay} L${cardX + stepW - 4},${ay}`)
             .attr('stroke', 'var(--ok)').attr('stroke-width', 2).attr('fill', 'none')
-            .attr('marker-end', 'url(#arrow-head-acc)').attr('opacity', 0);
-          a.transition().delay(120).duration(220).attr('opacity', 1);
+            .attr('marker-end', arrows.flow).attr('opacity', 0);
+          a.transition().delay(motionTime(120)).duration(motionTime(220)).attr('opacity', 1);
         }
       });
     }
 
     if (stepNow === 0) {
-      d3.select('#dw-log').html('Click <b>Next step ▶</b> to walk the durable-write path, or <b>⚡ Crash now</b> to trigger a torn-write scenario and watch recovery rebuild the page.');
+      figure.select('[data-status]').html('Click <b>Step</b> to walk the durable-write path, or <b>Crash now</b> to trigger a torn-write scenario and watch recovery rebuild the page.');
     } else if (stepNow === 1) {
-      d3.select('#dw-log').html('A row mutation marked page #128 dirty in the buffer pool. The bytes only exist in RAM — a crash now would lose them.');
+      figure.select('[data-status]').html('A row mutation marked page #128 dirty in the buffer pool. The bytes only exist in RAM — a crash now would lose them.');
     } else if (stepNow === 2) {
-      d3.select('#dw-log').html('Step ① · doublewrite area written and fsynced (one large sequential I/O). Now we can risk the random home write — if it tears, the pristine V2 lives here.');
+      figure.select('[data-status]').html('Step ① · doublewrite area written and fsynced (one large sequential I/O). Now we can risk the random home write — if it tears, the pristine V2 lives here.');
     } else if (stepNow === 3 && !dw.crashed) {
-      d3.select('#dw-log').html('Step ② · home page written + fsynced cleanly. Doublewrite area is unused at next boot.');
+      figure.select('[data-status]').html('Step ② · home page written + fsynced cleanly. Doublewrite area is unused at next boot.');
     } else if (stepNow === 3 && dw.crashed) {
-      d3.select('#dw-log').html('Step ② · power loss mid-write. The 16 KB home page is half V1, half V2. Checksum fails. <b>Click Next step ▶</b> to begin recovery.');
+      figure.select('[data-status]').html('Step ② · power loss mid-write. The 16 KB home page is half V1, half V2. Checksum fails. <b>Click Step</b> to begin recovery.');
     } else if (stepNow === 4) {
-      d3.select('#dw-log').html('③ Scan: recovery walks every page header looking for a checksum mismatch. Page #128 is flagged.');
+      figure.select('[data-status]').html('③ Scan: recovery walks every page header looking for a checksum mismatch. Page #128 is flagged.');
     } else if (stepNow === 5) {
-      d3.select('#dw-log').html('④ Read: the pristine V2 is loaded from the doublewrite area (which was fsynced before the home write).');
+      figure.select('[data-status]').html('④ Read: the pristine V2 is loaded from the doublewrite area (which was fsynced before the home write).');
     } else if (stepNow === 6) {
-      d3.select('#dw-log').html('⑤ Rewrite: the torn home page is overwritten with V2. Checksum now matches.');
+      figure.select('[data-status]').html('⑤ Rewrite: the torn home page is overwritten with V2. Checksum now matches.');
     } else if (stepNow >= 7) {
-      d3.select('#dw-log').html('⑥ Done: redo replay assumes a structurally intact page — now true again. Recovery completes; mysqld continues startup.');
+      figure.select('[data-status]').html('⑥ Done: redo replay assumes a structurally intact page — now true again. Recovery completes; mysqld continues startup.');
     }
   }
   renderDw();
-})();
+}

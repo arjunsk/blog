@@ -1,0 +1,68 @@
+.innodb-figure {
+  --bg: var(--page);
+  --panel: var(--page);
+  --panel-2: var(--raised);
+  --ink: var(--text);
+  --ink-2: var(--muted);
+  --ink-dim: var(--muted);
+  --border-2: var(--control-border);
+  --accent-2: #bda2f7;
+  --purple: var(--accent-2);
+  --blue: var(--accent);
+  --green: #87d5a2;
+  --ok: var(--green);
+  --warn: #efd28c;
+  --err: #ffa5ad;
+  --orange: #f3b47d;
+  container-type: inline-size;
+  min-width: 0;
+  margin: 1rem 0 2.5rem;
+  padding: clamp(.8rem, 2.4vw, 1.25rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: .5rem;
+}
+
+.innodb-figure .controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  margin-bottom: .75rem;
+}
+
+.innodb-figure .btn, .innodb-figure input {
+  border: 1px solid var(--control-border);
+  border-radius: .32rem;
+  background: var(--raised);
+  color: var(--text);
+  min-height: 2.25rem;
+  padding: .35rem .65rem;
+  font-size: .875rem;
+}
+
+.innodb-figure input { width: 6rem; }
+.innodb-figure .btn { cursor: pointer; }
+.innodb-figure .btn:hover:not(:disabled) { border-color: var(--accent); }
+.innodb-figure .btn:disabled { cursor: default; opacity: .45; }
+.innodb-figure .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+.innodb-figure .viz-container {
+  overflow-x: auto;
+  padding: .4rem;
+  background: var(--page);
+  border: 1px solid var(--border);
+  border-radius: .35rem;
+}
+
+.innodb-figure svg { display: block; width: 100%; height: auto; min-width: 36rem; }
+.innodb-figure--btree svg { min-width: max(27rem, var(--tree-min-width, 0px)); }
+.innodb-figure--doublewrite svg { min-width: 40rem; }
+
+.innodb-figure svg { fill: var(--text); }
+.innodb-figure svg text { font-family: var(--mono); }
+.innodb-figure :is(.lbl-mono-dim, .rcell-label):not([fill]) { fill: var(--muted); }
+.innodb-figure .lbl-mono:not([font-size]) { font-size: 12px; }
+.innodb-figure :is(.lbl-mono-dim, .rcell-label):not([font-size]) { font-size: 11px; }
+.innodb-figure .rcell-val:not([font-size]) { font-size: 14px; }
+.innodb-figure .inspector { margin: .7rem 0 0; color: var(--muted); font-size: .875rem; }
+.innodb-figure .inspector b, .innodb-figure .inspector strong { color: var(--text); }

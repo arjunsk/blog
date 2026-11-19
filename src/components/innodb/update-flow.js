@@ -1,37 +1,9 @@
-/* insert.js — ⑤ Update Flow: full write path BEGIN → INSERT → UPDATE → COMMIT
-   Layout matches the original mockup:
-     ┌─ BUFFER POOL ─────────────────┬─ REDO LOG BUFFER ─┐
-     │ row cells: ID NAME TRX ROLL   │ #1, #2, #3 …       │
-     ├─ READVIEW ────────────────────┼─ REDO LOG FILE ────┤
-     ├─ UNDO TABLESPACE · TX_100'S UNDO PAGES ────────────┤
-     │  HEADER box (left)  │  RECORDS (right): #1  #2     │
-     └─────────────────────────────────────────────────────┘
-   A single clean orange curve runs from DB_ROLL_PTR ↓ to the latest undo box. */
-(function () {
-  const section = document.getElementById('insert');
-  section.innerHTML = `
-    <h2><span class="no">⑤</span>Update Flow</h2>
-    <p class="lead">Step through a transaction that inserts a row and updates the <code>name</code> column a few times. Watch the row in the B-tree page, the redo log records being appended, and the undo chain growing — all updated live. <code>COMMIT</code> fsyncs redo; update-undo records survive on the rseg history list; insert-undo is dropped.</p>
+import { select } from 'd3-selection';
+import { installArrowDefs } from './arrow-defs.js';
 
-    <div class="controls">
-      <button class="btn primary" data-act="begin">BEGIN</button>
-      <button class="btn"          data-act="insert">INSERT</button>
-      <button class="btn"          data-act="update">UPDATE name</button>
-      <button class="btn"          data-act="commit">COMMIT</button>
-      <button class="btn"          data-act="openrv">▾ Open ReadView</button>
-      <button class="btn"          data-act="closerv">× Close ReadView</button>
-      <button class="btn"          data-act="purge">✓ Purge</button>
-      <button class="btn"          data-act="reset">↺ Reset</button>
-    </div>
+export function mountUpdate(section) {
+  const figure = select(section);
 
-    <div class="viz-container" style="padding:24px">
-      <svg id="upd-svg" viewBox="0 0 960 700" style="width:100%;height:auto"></svg>
-    </div>
-    <div class="inspector" id="upd-log">Press <b>BEGIN</b>. Then <b>INSERT</b> (id=42, 'alice'). Then <b>UPDATE name</b> — the name cycles alice → alicia → allie → al. Finally <b>COMMIT</b>.</div>
-    <p class="ref"><code>row/row0ins.cc</code> · <code>row/row0upd.cc</code> (in-place update on clustered index) · <code>trx/trx0undo.cc</code> (undo record) · <code>log/log0write.cc</code> (fsync at commit)</p>
-  `;
-
-  // OCR'd from screenshots — the original cycles through diminutives of "alice"
   const NAME_CYCLE = ['alice', 'alicia', 'allie', 'al'];
 
   let state;
@@ -53,7 +25,7 @@
   }
   reset();
 
-  function log(html) { d3.select('#upd-log').html(html); }
+  function log(html) { figure.select('[data-status]').html(html); }
   function nextLsn() { state.lsn += 10; return state.lsn; }
   function addRedo(type) {
     const r = { id: state.redoBuf.length + 1, lsn: nextLsn(), type, onDisk: false };
@@ -105,7 +77,7 @@
     state.phase = 'committed';
     if (state.undoHeader) state.undoHeader.state = 'TRX_UNDO_TO_PURGE';
     state.trxNo = 100;
-    log(`<code>COMMIT tx_100</code>: redo log buffer fsynced. <code>INSERT-undo</code> will be discarded; <code>UPDATE-undo</code> joins rseg 0's history list. ReadViews opened from now on can still skip this trx.`);
+    log(`<code>COMMIT tx_100</code>: redo log buffer fsynced. <code>INSERT-undo</code> will be discarded; <code>UPDATE-undo</code> joins rseg 0's history list. A read view opened after commit can see this transaction.`);
     render();
   }
   function openRv() {
@@ -168,7 +140,7 @@
   }
 
   // ===== drawing helpers =====
-  const svg = () => d3.select('#upd-svg');
+  const svg = () => figure.select('[data-diagram]');
 
   function panel(g, x, y, w, h, title, sub, stroke) {
     g.append('rect').attr('x', x).attr('y', y).attr('width', w).attr('height', h).attr('rx', 8)
@@ -218,11 +190,11 @@
   }
 
   function render() {
-    const s = svg(); s.selectAll('*').remove(); installArrowDefs(s);
+    const s = svg(); s.selectAll('*').remove(); const arrows = installArrowDefs(s);
 
     // ===== ① BUFFER POOL =====
     panel(s, GEOM.bp.x, GEOM.bp.y, GEOM.bp.w, GEOM.bp.h, 'BUFFER POOL',
-      'PAGE STATE: ' + (state.committed ? 'CLEAN' : (state.row ? 'DIRTY (NOT ON DISK)' : 'EMPTY')));
+      'PAGE STATE: ' + (state.row ? 'DIRTY (NOT FLUSHED)' : 'EMPTY'));
     s.append('text').attr('x', GEOM.bp.x + 16).attr('y', GEOM.bp.y + 56).attr('class', 'lbl-mono-dim')
       .text('B+TREE LEAF PAGE · 1 ROW');
     if (state.row) {
@@ -417,7 +389,7 @@
        .attr('d', `M${x1},${midY} L${x2},${midY}`)
        .attr('fill', 'none')
        .attr('stroke', 'var(--accent-2)').attr('stroke-width', 1.5)
-       .attr('marker-end', 'url(#arrow-head-purple)')
+       .attr('marker-end', arrows.undo)
        .attr('opacity', 0.9);
     });
 
@@ -433,7 +405,7 @@
 
     // ===== ⑥ DB_ROLL_PTR ARROW (the clean one) =====
     if (state.row && state.undo.length) {
-      drawRollPtrArrow();
+      drawRollPtrArrow(arrows.flow);
     }
   }
 
@@ -445,7 +417,7 @@
   //   3. Diagonal across the RF-UT gap (y=296..312) toward above the target.
   //   4. Vertical drop into the top of the target undo card.
   // Rounded line joins keep the corners visually smooth.
-  function drawRollPtrArrow() {
+  function drawRollPtrArrow(markerUrl) {
     const s = svg();
     const cell = bpCellBox(3);
     const startX = cell.x + cell.w / 2;
@@ -477,10 +449,10 @@
      .attr('stroke-width', 2)
      .attr('stroke-linejoin', 'round')
      .attr('stroke-linecap', 'round')
-     .attr('marker-end', 'url(#arrow-head-acc)');
+     .attr('marker-end', markerUrl);
     // No label — the orange color + arrowhead is self-explanatory and a
     // text label here would overlap the REDO LOG FILE panel header.
   }
 
   render(); updateBtns();
-})();
+}

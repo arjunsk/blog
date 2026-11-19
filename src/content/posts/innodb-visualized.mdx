@@ -1,27 +1,34 @@
 ---
 title: "InnoDB Internals, Visualized"
-summary: "An interactive guide to how InnoDB stores rows, reads older versions, and recovers after a crash."
+summary: "Four interactive diagrams trace how InnoDB stores a row, records an update, reads an older version, and recovers a torn page."
 date: 2026-11-19
 topic: "Database internals"
 ---
 
-import InnoDbGuide from '../../components/InnoDbGuide.astro';
+import InnoDbFigure from '../../components/InnoDbFigure.astro';
 
-A single row update in MySQL touches more than the row. InnoDB may need to preserve the old version for readers, record the change for crash recovery, and hold locks until the transaction commits. This guide lets you step through those parts one at a time.
+A row update starts with a lookup in an index. Its effects then reach the undo log, the redo log, and eventually the data file. These four simulations follow that path, including what a concurrent reader sees and what a crash can leave behind.
 
-## Interactive guide
+## Split a clustered B+ tree
 
-Start with the B+ tree. Use the guide’s menu to switch simulations, or open it full screen to keep the chapter list in view.
+The leaves of an InnoDB clustered index contain the rows, ordered by the clustered key. This model gives each leaf room for just three keys. Insert **40** into the starting leaf to split it and see a separator copied into a new root.
 
-<InnoDbGuide />
+<InnoDbFigure kind="btree" />
 
-## What to explore
+## Follow a row update
 
-- **Storage layout.** Start with the clustered index and zoom in from a B+ tree to a leaf page and then to an individual row.
-- **Transactions and visibility.** Follow an update into the undo log, then use the read-view and visibility simulations to see how a reader finds an older version.
-- **Recovery.** Step through redo, undo, and doublewrite to see what each mechanism handles after a crash.
-- **PostgreSQL comparisons.** Compare how the two engines store rows, find visible versions, reclaim space, and access indexes.
+Try **BEGIN**, **INSERT**, and **UPDATE name**. Watch the row change in the buffer pool while an undo record saves the old value and redo records accumulate. **COMMIT** flushes redo in this model. The data page can stay dirty until a later flush. [InnoDB redo log](https://dev.mysql.com/doc/dev/mysql-server/8.4.11/PAGE_INNODB_REDO_LOG.html)
 
-## Reading the diagrams
+<InnoDbFigure kind="update" />
 
-The simulations use small examples so you can follow each state change. Some sections reference MySQL 5.7 source files, so names and details can differ in other versions.
+## Read an older version with MVCC
+
+A reader opens a snapshot while another transaction changes a balance from **$100** to **$50**. Step through the four events to compare how InnoDB can walk back through undo and how PostgreSQL can examine retained tuple versions.
+
+<InnoDbFigure kind="mvcc" />
+
+## Recover a torn page with doublewrite
+
+A crash during a data-file write can leave a page partly old and partly new. With doublewrite recovery enabled, InnoDB can restore a complete copy before applying redo. Press **Crash now**, then **Step** to follow the recovery. [MySQL doublewrite buffer documentation](https://dev.mysql.com/doc/refman/8.4/en/innodb-doublewrite-buffer.html)
+
+<InnoDbFigure kind="doublewrite" />

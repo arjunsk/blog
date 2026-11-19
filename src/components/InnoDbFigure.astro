@@ -1,0 +1,85 @@
+---
+import './innodb/figures.css';
+import './innodb/mvcc.css';
+
+type Kind = 'btree' | 'update' | 'mvcc' | 'doublewrite';
+
+interface Props {
+  kind: Kind;
+}
+
+const { kind } = Astro.props;
+const labels: Record<Kind, string> = {
+  btree: 'Clustered B+ tree simulator',
+  update: 'InnoDB transaction simulator',
+  mvcc: 'MVCC balance comparison',
+  doublewrite: 'Doublewrite recovery simulator',
+};
+const title = labels[kind];
+---
+<figure class:list={['innodb-figure', `innodb-figure--${kind}`]} aria-label={title} data-innodb-figure={kind}>
+  {kind === 'btree' && (
+    <>
+      <div class="controls" role="group" aria-label="Insert keys">
+        <input type="number" step="1" placeholder="Key" aria-label="Key to insert" data-key />
+        <button type="button" class="btn primary" data-act="insert">Insert</button>
+        <button type="button" class="btn" data-act="insert5">Insert 5 random</button>
+        <button type="button" class="btn" data-act="insert20">Insert 20 random</button>
+        <button type="button" class="btn" data-act="reset">Reset</button>
+      </div>
+      <div class="viz-container" tabindex="0" role="group" aria-label="Scrollable B+ tree diagram">
+        <svg data-diagram viewBox="0 0 640 124" role="img" aria-label="Clustered index and its leaf pages"></svg>
+      </div>
+      <p class="inspector" data-status aria-live="polite">The starting leaf contains 20, 35, and 50.</p>
+    </>
+  )}
+
+  {kind === 'update' && (
+    <>
+      <div class="controls" role="group" aria-label="Run a transaction">
+        <button type="button" class="btn primary" data-act="begin">BEGIN</button>
+        <button type="button" class="btn" data-act="insert">INSERT</button>
+        <button type="button" class="btn" data-act="update">UPDATE name</button>
+        <button type="button" class="btn" data-act="commit">COMMIT</button>
+        <button type="button" class="btn" data-act="openrv">Open read view</button>
+        <button type="button" class="btn" data-act="closerv">Close read view</button>
+        <button type="button" class="btn" data-act="purge">Purge</button>
+        <button type="button" class="btn" data-act="reset">Reset</button>
+      </div>
+      <div class="viz-container" tabindex="0" role="group" aria-label="Scrollable transaction diagram">
+        <svg data-diagram viewBox="0 0 960 700" role="img" aria-label="Buffer pool, redo log, and undo records"></svg>
+      </div>
+      <p class="inspector" data-status aria-live="polite">Press <strong>BEGIN</strong> to start the transaction.</p>
+    </>
+  )}
+
+  {kind === 'mvcc' && <div data-mvcc-steps></div>}
+
+  {kind === 'doublewrite' && (
+    <>
+      <div class="controls" role="group" aria-label="Run recovery">
+        <button type="button" class="btn primary" data-act="dw-step">Step</button>
+        <button type="button" class="btn" data-act="dw-play">Auto play</button>
+        <button type="button" class="btn" data-act="dw-crash">Crash now</button>
+        <button type="button" class="btn" data-act="dw-reset">Reset</button>
+      </div>
+      <div class="viz-container" tabindex="0" role="group" aria-label="Scrollable doublewrite diagram">
+        <svg data-diagram viewBox="0 0 1200 520" role="img" aria-label="Page flush through the doublewrite buffer"></svg>
+      </div>
+      <p class="inspector" data-status aria-live="polite"></p>
+    </>
+  )}
+  <noscript><p>Enable JavaScript to run this simulation.</p></noscript>
+</figure>
+
+<script>
+  import { mountBtree } from './innodb/btree.js';
+  import { mountUpdate } from './innodb/update-flow.js';
+  import { mountMvcc } from './innodb/mvcc.js';
+  import { mountDoublewrite } from './innodb/doublewrite.js';
+
+  document.querySelectorAll<HTMLElement>('[data-innodb-figure="btree"]').forEach(mountBtree);
+  document.querySelectorAll<HTMLElement>('[data-innodb-figure="update"]').forEach(mountUpdate);
+  document.querySelectorAll<HTMLElement>('[data-mvcc-steps]').forEach(mountMvcc);
+  document.querySelectorAll<HTMLElement>('[data-innodb-figure="doublewrite"]').forEach(mountDoublewrite);
+</script>
