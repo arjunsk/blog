@@ -1,3 +1,5 @@
+import { getCollection } from 'astro:content';
+
 export function sitePath(path = '') {
   const base = import.meta.env.BASE_URL.replace(/\/$/, '');
   return `${base}/${path.replace(/^\//, '')}`;
@@ -21,16 +23,9 @@ export const projects = [
   },
 ];
 
-export const publishedWriting = [
-  {
-    title: 'Build a Tiny Database in Java',
-    url: 'https://medium.com/javarevisited/build-a-tiny-database-in-java-ca6d3f06e115',
-  },
-  {
-    title: 'Build a Tiny Compiler in Java',
-    url: 'https://medium.com/javarevisited/build-a-tiny-compiler-in-java-662f67a1ce85',
-  },
-];
+export function getVisiblePosts() {
+  return getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft);
+}
 
 export function formatDate(date: Date) {
   return new Intl.DateTimeFormat('en-US', {

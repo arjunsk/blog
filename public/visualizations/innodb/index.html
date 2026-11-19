@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>InnoDB Internals - Visual Guide</title>
+<link rel="stylesheet" href="css/style.css?v=133">
+<script src="vendor/d3.min.js"></script>
+</head>
+<body>
+
+<button id="sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-controls="sidebar" aria-expanded="true" title="Toggle sidebar  ([  or  ⌘B)">≡</button>
+
+<aside id="sidebar">
+  <div class="brand">
+    <h1>InnoDB <span>Internals</span></h1>
+    <h2>InnoDB Visualized</h2>
+  </div>
+  <nav>
+    <a href="#overview" class="active nav-overview"><span class="num">0</span><span class="lbl">Overview</span></a>
+
+    <div class="nav-section">Layout</div>
+    <a href="#btree"><span class="num">1</span><span class="lbl">B+Tree</span></a>
+    <a href="#page"><span class="num">2</span><span class="lbl">Page</span></a>
+    <a href="#record"><span class="num">3</span><span class="lbl">Row</span></a>
+
+    <div class="nav-section">Write path</div>
+    <a href="#change"><span class="num">4</span><span class="lbl">Multi Version</span></a>
+    <a href="#insert"><span class="num">5</span><span class="lbl">Update · Simple</span></a>
+    <a href="#insert-adv"><span class="num">6</span><span class="lbl">Update · Advanced</span></a>
+    <a href="#history"><span class="num">7</span><span class="lbl">Undo + Rseg</span></a>
+    <a href="#purge"><span class="num">8</span><span class="lbl">Purge</span></a>
+    <a href="#doublewrite"><span class="num">9</span><span class="lbl">Doublewrite</span></a>
+
+    <div class="nav-section">Recovery</div>
+    <a href="#redolog"><span class="num">10</span><span class="lbl">Redo Log</span></a>
+    <a href="#redo"><span class="num">11</span><span class="lbl">Apply Redo</span></a>
+    <a href="#resurrect"><span class="num">12</span><span class="lbl">Apply Undo</span></a>
+
+    <div class="nav-section">Read path</div>
+    <a href="#readview"><span class="num">13</span><span class="lbl">Read View</span></a>
+    <a href="#visibility"><span class="num">14</span><span class="lbl">Visibility</span></a>
+
+    <div class="nav-section">Locking</div>
+    <a href="#locking"><span class="num">15</span><span class="lbl">Row Locks</span></a>
+    <a href="#mtr"><span class="num">16</span><span class="lbl">MTR</span></a>
+
+    <div class="nav-section">Catalog</div>
+    <a href="#dd"><span class="num">17</span><span class="lbl">Data Dictionary</span></a>
+
+    <div class="nav-section">Full view</div>
+    <a href="#undo-full"><span class="num">18</span><span class="lbl">Undo</span></a>
+
+    <div class="nav-section">Postgres vs InnoDB</div>
+    <a href="#pg-row"><span class="num">19</span><span class="lbl">Row Storage</span></a>
+    <a href="#pg-mvcc"><span class="num">20</span><span class="lbl">MVCC Visibility</span></a>
+    <a href="#mvcc-compare"><span class="num">21</span><span class="lbl">MVCC Timeline</span></a>
+    <a href="#pg-reclaim"><span class="num">22</span><span class="lbl">Reclamation</span></a>
+    <a href="#pg-index"><span class="num">23</span><span class="lbl">Index Access</span></a>
+    <a href="#pg-locks"><span class="num">24</span><span class="lbl">Locking</span></a>
+    <a href="#pg-logs"><span class="num">25</span><span class="lbl">Redo + CLOG</span></a>
+  </nav>
+</aside>
+
+<main id="content">
+
+  <a class="back-to-post" href="../../posts/innodb-visualized/">Back to the article</a>
+  <noscript><p>The diagrams require JavaScript.</p></noscript>
+
+  <section id="overview" class="panel">
+    <h1 style="font-size:48px;margin:0 0 16px;letter-spacing:-0.03em;font-weight:600">InnoDB <span style="color:var(--accent);font-weight:300">Internals</span></h1>
+    <p class="lead">A hands-on tour of InnoDB internals. Every section traces what happens when you <code>BEGIN</code>, <code>INSERT</code>, <code>SELECT</code>, and <code>COMMIT</code> — through the buffer pool, the redo log, the undo log, the rollback segment, the read view, and the lock manager.</p>
+  </section>
+
+  <section id="btree"      class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="page"       class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="record"     class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="change"     class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="insert"     class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="insert-adv" class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="history"    class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="purge"      class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="doublewrite" class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="redolog"    class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="redo"       class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="resurrect"  class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="readview"   class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="visibility" class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="locking"    class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="mtr"        class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="dd"         class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="undo-full"  class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="pg-row"     class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="pg-mvcc"    class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="mvcc-compare" class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="pg-reclaim" class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="pg-index"   class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="pg-locks"   class="panel"><div class="placeholder">Loading…</div></section>
+  <section id="pg-logs"    class="panel"><div class="placeholder">Loading…</div></section>
+
+</main>
+
+<script src="js/shell.js?v=133"></script>
+<script src="js/btree.js?v=132"></script>
+<script src="js/page.js?v=132"></script>
+<script src="js/row.js?v=132"></script>
+<script src="js/mvcc.js?v=132"></script>
+<script src="js/update_flow.js?v=132"></script>
+<script src="js/update_advanced.js?v=132"></script>
+<script src="js/history.js?v=132"></script>
+<script src="js/purge.js?v=132"></script>
+<script src="js/doublewrite.js?v=132"></script>
+<script src="js/redo_log.js?v=132"></script>
+<script src="js/apply_redo.js?v=132"></script>
+<script src="js/apply_undo.js?v=132"></script>
+<script src="js/read_view.js?v=132"></script>
+<script src="js/locking.js?v=132"></script>
+<script src="js/mtr.js?v=132"></script>
+<script src="js/dd.js?v=132"></script>
+<script src="js/undo_full.js?v=132"></script>
+<script src="js/pg_row_storage.js?v=132"></script>
+<script src="js/pg_mvcc.js?v=132"></script>
+<script src="js/mvcc_compare.js?v=132"></script>
+<script src="js/pg_reclaim.js?v=132"></script>
+<script src="js/pg_index.js?v=132"></script>
+<script src="js/pg_locks.js?v=132"></script>
+<script src="js/pg_logs.js?v=132"></script>
+</body>
+</html>

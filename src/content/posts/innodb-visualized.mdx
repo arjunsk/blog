@@ -1,0 +1,27 @@
+---
+title: "InnoDB Internals, Visualized"
+summary: "An interactive guide to how InnoDB stores rows, reads older versions, and recovers after a crash."
+date: 2026-11-19
+topic: "Database internals"
+---
+
+import InnoDbGuide from '../../components/InnoDbGuide.astro';
+
+A single row update in MySQL touches more than the row. InnoDB may need to preserve the old version for readers, record the change for crash recovery, and hold locks until the transaction commits. This guide lets you step through those parts one at a time.
+
+## Interactive guide
+
+Start with the B+ tree. Use the guide’s menu to switch simulations, or open it full screen to keep the chapter list in view.
+
+<InnoDbGuide />
+
+## What to explore
+
+- **Storage layout.** Start with the clustered index and zoom in from a B+ tree to a leaf page and then to an individual row.
+- **Transactions and visibility.** Follow an update into the undo log, then use the read-view and visibility simulations to see how a reader finds an older version.
+- **Recovery.** Step through redo, undo, and doublewrite to see what each mechanism handles after a crash.
+- **PostgreSQL comparisons.** Compare how the two engines store rows, find visible versions, reclaim space, and access indexes.
+
+## Reading the diagrams
+
+The simulations use small examples so you can follow each state change. Some sections reference MySQL 5.7 source files, so names and details can differ in other versions.

@@ -1,7 +1,7 @@
 ---
-import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { render, type CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import { formatDate, sitePath } from '../../site';
+import { formatDate, getVisiblePosts, sitePath } from '../../site';
 import '../../styles/post-navigation.css';
 
 interface ChapterGroup {
@@ -10,7 +10,7 @@ interface ChapterGroup {
 }
 
 export async function getStaticPaths() {
-  const posts = (await getCollection('posts')).sort((a, b) =>
+  const posts = (await getVisiblePosts()).sort((a, b) =>
     a.data.date.getTime() - b.data.date.getTime() || a.data.title.localeCompare(b.data.title),
   );
   const byTopic = new Map<string, ChapterGroup>();

@@ -1,0 +1,29 @@
+---
+import { sitePath } from '../site';
+
+const guideUrl = sitePath('visualizations/innodb/index.html');
+---
+<figure class="innodb-guide">
+  <figcaption>
+    <a href={guideUrl}>Open the guide full screen</a>
+  </figcaption>
+  <iframe
+    src={`${guideUrl}#btree`}
+    title="InnoDB Internals interactive visual guide"
+    loading="lazy"
+    sandbox="allow-scripts"
+  ></iframe>
+</figure>
+
+<style>
+  .innodb-guide { margin: 1rem 0 2rem; }
+  figcaption { display: flex; justify-content: flex-end; margin-bottom: .6rem; font-size: .875rem; }
+  iframe {
+    display: block;
+    width: 100%;
+    height: clamp(27rem, 75vh, 45rem);
+    border: 1px solid var(--border);
+    border-radius: .5rem;
+    background: var(--page);
+  }
+</style>
