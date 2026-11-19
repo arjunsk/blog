@@ -1,26 +1,22 @@
 ---
 import Base from '../layouts/Base.astro';
-import { formatDate, getVisiblePosts, projects, sitePath } from '../site';
+import { formatDate, getVisiblePosts, projects, siteName, sitePath } from '../site';
 
 const posts = (await getVisiblePosts()).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 const latest = posts[0];
 ---
-<Base title="Systems notes and projects" description="Notes and projects on databases, data structures, and small systems.">
+<Base title="Systems notes and projects" description="Projects and interactive notes on database internals.">
   <header class="page-heading">
-    <h1>Systems notes</h1>
-    <p>Notes and projects on databases, data structures, and small systems.</p>
+    <img src={sitePath('autoinc.svg')} alt="" width="76" height="56" class="monogram" />
+    <h1>{siteName}</h1>
+    <p>I build small systems and write about how databases work.</p>
   </header>
 
   <section class="content-section" id="projects" aria-labelledby="projects-title">
     <h2 id="projects-title">Projects</h2>
-    <ul class="reading-list">
+    <ul class="project-links">
       {projects.map(project => (
-        <li class="reading-row">
-          <div>
-            <h3><a href={project.url}>{project.name}</a></h3>
-            <p>{project.description}</p>
-          </div>
-        </li>
+        <li><a href={project.url}>{project.name}</a></li>
       ))}
     </ul>
   </section>
@@ -40,3 +36,24 @@ const latest = posts[0];
     </section>
   )}
 </Base>
+
+<style>
+  .monogram {
+    display: block;
+    margin: 0 0 .9rem -.35rem;
+  }
+
+  .project-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem 1.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+
+  .project-links a { text-decoration-color: var(--control-border); }
+  .project-links a:hover { text-decoration-color: currentColor; }
+</style>

@@ -10,17 +10,14 @@ export function sitePath(path = '') {
 export const projects = [
   {
     name: 'Tiny DB',
-    description: 'A small relational database with a query planner and storage engine.',
     url: 'https://github.com/dborchard/tiny-db',
   },
   {
     name: 'Tiny Dataframe',
-    description: 'A Go dataframe library built on Apache Arrow and Parquet.',
     url: 'https://github.com/dborchard/tiny_dataframe',
   },
   {
     name: 'K-means',
-    description: 'A Go implementation of Elkan’s accelerated k-means algorithm.',
     url: 'https://github.com/arjunsk/kmeans',
   },
 ];
