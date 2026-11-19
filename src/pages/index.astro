@@ -11,7 +11,11 @@ const latest = posts[0];
     <p>Hey! I build small systems and write about how databases work.</p>
     <div class="intro-details">
       <p><strong>Currently Learning:</strong> MySQL internals, gRPC</p>
-      <p><strong>Database Projects Involved:</strong> AWS Aurora, matrixone</p>
+      <p>
+        <strong>Database Projects Involved:</strong>
+        <a href="https://aws.amazon.com/rds/aurora/">AWS Aurora</a>,
+        <a href="https://github.com/matrixorigin/matrixone">matrixone</a>
+      </p>
       <p class="project-links" id="projects">
         <strong>Personal Projects:</strong>
         {projects.map((project, index) => (
@@ -52,6 +56,6 @@ const latest = posts[0];
   }
 
   .project-links a { white-space: nowrap; }
-  .project-links a { text-decoration-color: var(--control-border); }
-  .project-links a:hover { text-decoration-color: currentColor; }
+  .intro-details a { text-decoration-color: var(--control-border); }
+  .intro-details a:hover { text-decoration-color: currentColor; }
 </style>
