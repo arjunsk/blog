@@ -6,9 +6,10 @@ interface Props {
   title: string;
   description: string;
   section?: 'blog';
+  wide?: boolean;
 }
 
-const { title, description, section } = Astro.props;
+const { title, description, section, wide = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 <!doctype html>
@@ -28,7 +29,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   </head>
   <body>
     <a href="#content" class="skip">Skip to content</a>
-    <header class="shell site-header">
+    <header class:list={['shell', 'site-header', { 'wide-shell': wide }]}>
       <a class="brand" href={sitePath()} aria-label="Arjun, home">Arjun</a>
       <nav aria-label="Main navigation">
         <a href={sitePath('#projects')}>Projects</a>
@@ -36,7 +37,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         <a href="https://github.com/arjunsk">GitHub</a>
       </nav>
     </header>
-    <main id="content" class="shell">
+    <main id="content" class:list={['shell', { 'wide-shell': wide }]}>
       <slot />
     </main>
   </body>

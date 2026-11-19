@@ -1,0 +1,103 @@
+.post-layout {
+  --rail-width: 12.5rem;
+  --rail-gap: clamp(1.5rem, 3vw, 2.75rem);
+  padding-block-start: clamp(1.75rem, 5vw, 3.5rem);
+}
+
+.post-content { min-width: 0; }
+.post-content .post-header { margin-block-start: 0; }
+.post-content .prose :is(h2, h3)[id] { scroll-margin-block-start: 1.5rem; }
+
+.chapter-rail, .outline-rail {
+  align-self: start;
+  min-width: 0;
+  color: var(--muted);
+  font-size: .875rem;
+  line-height: 1.5;
+}
+
+.rail-title, .chapter-group > summary { cursor: pointer; }
+.rail-title { color: var(--text); font-weight: 650; }
+.rail-panel > nav { margin-top: .65rem; }
+.chapter-group + .chapter-group { margin-top: .5rem; }
+.chapter-group[open] > summary { color: var(--text); }
+
+.rail-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chapter-group > .rail-list {
+  margin: .35rem 0 .55rem .3rem;
+  padding-inline-start: .65rem;
+  border-inline-start: 1px solid var(--border);
+}
+
+.rail-list a {
+  display: block;
+  padding: .29rem .4rem;
+  border-radius: .2rem;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.rail-list a:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.rail-list a[aria-current] {
+  background: var(--surface);
+  color: var(--accent);
+}
+
+.outline-subheading { padding-inline-start: .75rem; }
+
+@media (min-width: 68.001rem) {
+  .shell.wide-shell { width: min(100% - 3.5rem, 78rem); }
+
+  .post-layout {
+    display: grid;
+    grid-template-columns: var(--rail-width) minmax(0, 1fr);
+    gap: var(--rail-gap);
+  }
+
+  .post-content {
+    display: grid;
+    grid-template-columns: minmax(0, 44rem);
+  }
+
+  .post-content.with-outline {
+    grid-template-columns: minmax(0, 44rem) minmax(10rem, var(--rail-width));
+    column-gap: var(--rail-gap);
+  }
+
+  .post-content .post-header { grid-area: 1 / 1; }
+  .post-content .prose { grid-area: 2 / 1; min-width: 0; }
+
+  .chapter-rail, .outline-rail {
+    position: sticky;
+    inset-block-start: 1.5rem;
+    max-height: calc(100dvh - 3rem);
+    overflow: auto;
+    scrollbar-width: thin;
+  }
+
+  .chapter-rail { padding-inline-end: .85rem; border-inline-end: 1px solid var(--border); }
+
+  .outline-rail {
+    grid-area: 1 / 2 / 3 / 3;
+    padding-inline-start: .85rem;
+    border-inline-start: 1px solid var(--border);
+  }
+}
+
+@media (max-width: 68rem) {
+  .chapter-rail, .outline-rail {
+    margin-block-end: 1.4rem;
+    padding: .7rem .85rem;
+    border: 1px solid var(--border);
+    border-radius: .35rem;
+  }
+}

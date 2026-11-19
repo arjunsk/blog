@@ -2,26 +2,145 @@
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import { formatDate, sitePath } from '../../site';
+import '../../styles/post-navigation.css';
+
+interface ChapterGroup {
+  topic: string;
+  entries: { id: string; title: string }[];
+}
 
 export async function getStaticPaths() {
-  return (await getCollection('posts')).map(post => ({
+  const posts = (await getCollection('posts')).sort((a, b) =>
+    a.data.date.getTime() - b.data.date.getTime() || a.data.title.localeCompare(b.data.title),
+  );
+  const byTopic = new Map<string, ChapterGroup>();
+  for (const { id, data: { topic, title } } of posts) {
+    let group = byTopic.get(topic);
+    if (!group) {
+      group = { topic, entries: [] };
+      byTopic.set(topic, group);
+    }
+    group.entries.push({ id, title });
+  }
+  const chapters = [...byTopic.values()].sort((a, b) => a.topic.localeCompare(b.topic));
+
+  return posts.map(post => ({
     params: { slug: post.id },
-    props: { post },
+    props: { post, chapters },
   }));
 }
 
-const { post } = Astro.props as { post: CollectionEntry<'posts'> };
-const { Content } = await render(post);
+interface Props {
+  post: CollectionEntry<'posts'>;
+  chapters: ChapterGroup[];
+}
+
+const { post, chapters } = Astro.props;
+const { Content, headings } = await render(post);
+const outline = headings.filter(({ depth }) => depth === 2 || depth === 3);
 const { title, summary, date, topic } = post.data;
 ---
-<Base title={`${title} — Arjun`} description={summary} section="blog">
-  <article class="post">
-    <header class="post-header">
-      <a class="back-link" href={sitePath('posts/')}>All posts</a>
-      <p class="eyebrow">{topic} · <time datetime={date.toISOString().slice(0, 10)}>{formatDate(date)}</time></p>
-      <h1>{title}</h1>
-      <p class="post-deck">{summary}</p>
-    </header>
-    <div class="prose"><Content /></div>
-  </article>
+<Base title={`${title} — Arjun`} description={summary} section="blog" wide>
+  <div class="post-layout">
+    <aside class="chapter-rail" aria-label="Chapter navigation">
+      <details class="rail-panel" data-post-menu open>
+        <summary class="rail-title">Chapters</summary>
+        <nav aria-label="Chapters">
+          {chapters.map(chapter => (
+            <details class="chapter-group" open={chapter.topic === topic}>
+              <summary>{chapter.topic}</summary>
+              <ul class="rail-list">
+                {chapter.entries.map(entry => (
+                  <li>
+                    <a
+                      href={sitePath(`posts/${entry.id}/`)}
+                      aria-current={entry.id === post.id ? 'page' : undefined}
+                    >{entry.title}</a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </nav>
+      </details>
+    </aside>
+
+    <article class:list={['post-content', { 'with-outline': outline.length > 0 }]}>
+      <header class="post-header">
+        <a class="back-link" href={sitePath('posts/')}>All posts</a>
+        <p class="eyebrow">{topic} · <time datetime={date.toISOString().slice(0, 10)}>{formatDate(date)}</time></p>
+        <h1>{title}</h1>
+        <p class="post-deck">{summary}</p>
+      </header>
+
+      {outline.length > 0 && (
+        <aside class="outline-rail" aria-label="Article outline">
+          <details class="rail-panel" data-post-menu data-outline open>
+            <summary class="rail-title">On this page</summary>
+            <nav aria-label="On this page">
+              <ul class="rail-list">
+                {outline.map(({ slug, text, depth }) => (
+                  <li class:list={[{ 'outline-subheading': depth === 3 }]}>
+                    <a href={`#${encodeURIComponent(slug)}`}>{text}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </details>
+        </aside>
+      )}
+
+      <div class="prose"><Content /></div>
+    </article>
+  </div>
 </Base>
+
+<script>
+  const compact = window.matchMedia('(max-width: 68rem)');
+  const menus = document.querySelectorAll<HTMLDetailsElement>('details[data-post-menu]');
+
+  function setMenuDefaults() {
+    menus.forEach(menu => { menu.open = !compact.matches; });
+  }
+
+  setMenuDefaults();
+  compact.addEventListener('change', setMenuDefaults);
+
+  const entries = [...document.querySelectorAll<HTMLAnchorElement>('[data-outline] a')].flatMap(link => {
+    const heading = document.getElementById(decodeURIComponent(link.hash.slice(1)));
+    return heading ? [{ link, heading }] : [];
+  });
+
+  if (entries.length > 0) {
+    let active: HTMLAnchorElement | undefined;
+    let frame: number | undefined;
+
+    function markActive(link: HTMLAnchorElement | undefined) {
+      if (active === link) return;
+      active?.removeAttribute('aria-current');
+      link?.setAttribute('aria-current', 'location');
+      active = link;
+    }
+
+    function markScrollPosition() {
+      const entry = entries.findLast(({ heading }) => heading.getBoundingClientRect().top <= 96);
+      markActive(entry?.link);
+    }
+
+    function markHash() {
+      const entry = entries.find(({ link }) => link.hash === window.location.hash);
+      if (entry) markActive(entry.link);
+      else markScrollPosition();
+    }
+
+    window.addEventListener('scroll', () => {
+      if (frame !== undefined) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = undefined;
+        markScrollPosition();
+      });
+    }, { passive: true });
+    window.addEventListener('hashchange', markHash);
+    markHash();
+  }
+</script>
