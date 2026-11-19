@@ -8,11 +8,17 @@ const latest = posts[0];
 <Base title="Systems notes and projects" description="Projects and interactive notes on database internals.">
   <header class="page-heading home-intro">
     <h1>{siteName}</h1>
-    <p>I build small systems and write about how databases work.</p>
-    <p class="project-links" id="projects">
-      <strong>Personal Projects:</strong>
-      {projects.map(project => <a href={project.url}>{project.name}</a>)}
-    </p>
+    <p>Hey! I build small systems and write about how databases work.</p>
+    <div class="intro-details">
+      <p><strong>Currently Learning:</strong> MySQL internals, gRPC</p>
+      <p><strong>Database Projects Involved:</strong> AWS Aurora, matrixone</p>
+      <p class="project-links" id="projects">
+        <strong>Personal Projects:</strong>
+        {projects.map((project, index) => (
+          <span><a href={project.url}>{project.name}</a>{index < projects.length - 1 ? ',' : ''}</span>
+        ))}
+      </p>
+    </div>
   </header>
 
   {latest && (
@@ -34,15 +40,17 @@ const latest = posts[0];
 <style>
   .home-intro h1 { font-size: clamp(1.8rem, 4vw, 2.25rem); }
   .home-intro p { font-size: .9375rem; }
+  .intro-details { margin-top: .65rem; }
+  .intro-details p { margin: .2rem 0 0; }
+  .intro-details strong { color: var(--text); font-weight: 550; }
 
   .project-links {
     display: flex;
     flex-wrap: wrap;
-    gap: .18rem .75rem;
+    gap: .1rem .35rem;
     scroll-margin-top: 1.75rem;
   }
 
-  .project-links strong { color: var(--text); font-weight: 550; }
   .project-links a { white-space: nowrap; }
   .project-links a { text-decoration-color: var(--control-border); }
   .project-links a:hover { text-decoration-color: currentColor; }
