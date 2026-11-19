@@ -1,0 +1,24 @@
+---
+title: "What happens when a B+ tree leaf splits?"
+summary: "Insert a key, follow the split, and see how the parent decides which leaf to search."
+date: 2026-11-18
+topic: "Database internals"
+---
+
+import LeafSplit from '../../components/LeafSplit.astro';
+
+A B+ tree keeps its records in sorted leaf pages. Suppose a leaf can hold four keys and all four slots are full. Inserting a fifth key leaves us with two jobs: make room for it and give future searches a way to find the right leaf.
+
+<LeafSplit />
+
+## How the separator works
+
+With a separator of `36`, the root sends a search for `25` left and a search for `44` right. A search for `36` itself also goes right. The parent has a copy of the separator, while the record for `36` stays in the right leaf.
+
+Try inserting `58` and step to the end. The separator is now `44`. The key you inserted can differ from the key the root uses to route searches.
+
+## What the example leaves out
+
+Real pages are usually measured in bytes. Variable-length records can make an even split by key count a poor choice. A split can also fill an existing parent and propagate upward. This example starts with a single root leaf and uses a fixed capacity so you can follow one split at a time.
+
+The demo runs the sorted insertion and split calculation in Rust compiled to WebAssembly. TypeScript renders each step and handles the controls.

@@ -1,0 +1,35 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { formatDate, publishedWriting, sitePath } from '../../site';
+
+const posts = (await getCollection('posts')).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+<Base title="Blog — Arjun" description="Technical notes on databases and data structures, with interactive examples." section="blog">
+  <header class="listing-header">
+    <h1>Blog</h1>
+    <p>Notes on the internals of databases and the data structures they depend on.</p>
+  </header>
+  <div class="reading-list">
+    {posts.map(({ id, data }) => (
+      <article class="reading-row">
+        <div>
+          <p class="eyebrow">{data.topic}</p>
+          <h2><a href={sitePath(`posts/${id}/`)}>{data.title}</a></h2>
+          <p>{data.summary}</p>
+        </div>
+        <time datetime={data.date.toISOString().slice(0, 10)}>{formatDate(data.date)}</time>
+      </article>
+    ))}
+  </div>
+  <section class="external-writing" aria-labelledby="elsewhere">
+    <h2 id="elsewhere">Earlier writing</h2>
+    <ul class="reading-list">
+      {publishedWriting.map(post => (
+        <li class="reading-row">
+          <div><p class="eyebrow">{post.topic} · Medium</p><h3><a href={post.url}>{post.title}</a></h3></div>
+        </li>
+      ))}
+    </ul>
+  </section>
+</Base>

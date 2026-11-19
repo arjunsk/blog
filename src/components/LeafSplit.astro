@@ -1,0 +1,210 @@
+---
+import { sitePath } from '../site';
+---
+<leaf-split data-engine={sitePath('leaf-split.wasm')}>
+  <figure class="split">
+    <div class="split-top">
+      <figcaption>
+        <p class="eyebrow">Interactive figure</p>
+        <h2>Split a leaf page</h2>
+      </figcaption>
+      <span class="engine">Rust · WASM</span>
+    </div>
+
+    <div class="split-inputs" data-controls hidden>
+      <span>Key to insert</span>
+      <div class="key-options" role="group" aria-label="Key to insert">
+        <button type="button" data-key="18" aria-pressed="false">18</button>
+        <button type="button" data-key="36" aria-pressed="true">36</button>
+        <button type="button" data-key="58" aria-pressed="false">58</button>
+      </div>
+    </div>
+
+    <div class="stage" data-stage>
+      <div class="leaf">
+        <span class="node-label">Root leaf</span>
+        <div class="keys">
+          <span class="key">12</span><span class="key">25</span><span class="key">44</span><span class="key">62</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-copy" data-step-copy aria-live="polite">
+      <strong>One full leaf</strong>
+      <p>The root is also a leaf. All four slots are occupied.</p>
+    </div>
+
+    <div class="split-controls" data-controls hidden>
+      <div class="transport">
+        <button type="button" data-action="previous">Back</button>
+        <button type="button" data-action="play" class="play">Play</button>
+        <button type="button" data-action="next">Next</button>
+        <button type="button" data-action="reset">Reset</button>
+      </div>
+      <label class="scrubber">
+        <span data-step-number>Step 1 of 4</span>
+        <input type="range" min="0" max="3" value="0" aria-label="Split step" />
+      </label>
+    </div>
+    <p data-status class="split-status" role="status"></p>
+    <noscript><p class="split-status">Enable JavaScript to step through the split.</p></noscript>
+  </figure>
+</leaf-split>
+
+<script>
+  type SplitEngine = {
+    insert_key: (packed: number, count: number, key: number) => number;
+    left_leaf_len: (count: number, capacity: number) => number;
+  };
+
+  const originalKeys = [12, 25, 44, 62];
+  const packedKeys = originalKeys.reduce((packed, key, index) => packed | (key << (index * 6)), 0);
+  const lastStep = 3;
+
+  class LeafSplit extends HTMLElement {
+    async connectedCallback() {
+      const stage = this.querySelector<HTMLElement>('[data-stage]')!;
+      const copy = this.querySelector<HTMLElement>('[data-step-copy]')!;
+      const status = this.querySelector<HTMLElement>('[data-status]')!;
+      const controls = this.querySelectorAll<HTMLElement>('[data-controls]');
+      const buttons = this.querySelectorAll<HTMLButtonElement>('[data-key]');
+      const previous = this.querySelector<HTMLButtonElement>('[data-action="previous"]')!;
+      const next = this.querySelector<HTMLButtonElement>('[data-action="next"]')!;
+      const play = this.querySelector<HTMLButtonElement>('[data-action="play"]')!;
+      const reset = this.querySelector<HTMLButtonElement>('[data-action="reset"]')!;
+      const scrubber = this.querySelector<HTMLInputElement>('input[type=range]')!;
+      const counter = this.querySelector<HTMLElement>('[data-step-number]')!;
+
+      let engine: SplitEngine;
+      try {
+        const response = await fetch(this.dataset.engine!);
+        if (!response.ok) throw new Error('Could not load the demo');
+        const { instance } = await WebAssembly.instantiate(await response.arrayBuffer());
+        engine = instance.exports as unknown as SplitEngine;
+      } catch {
+        status.textContent = 'The interactive demo could not load. Reload the page to try again.';
+        return;
+      }
+
+      let key = 36;
+      let step = 0;
+      let timer: number | undefined;
+
+      function leaf(label: string, keys: number[], highlight?: number) {
+        const cells = keys.map(value =>
+          `<span class="key${value === highlight ? ' highlight' : ''}">${value}</span>`,
+        ).join('');
+        return `<div class="leaf"><span class="node-label">${label}</span><div class="keys">${cells}</div></div>`;
+      }
+
+      function render() {
+        const packed = engine.insert_key(packedKeys, originalKeys.length, key);
+        const sorted = Array.from({ length: 5 }, (_, index) => (packed >>> (index * 6)) & 63);
+        const boundary = engine.left_leaf_len(sorted.length, originalKeys.length);
+        const left = sorted.slice(0, boundary);
+        const right = sorted.slice(boundary);
+        const separator = right[0];
+        const steps = [
+          ['One full leaf', 'The root is also a leaf. All four slots are occupied.'],
+          ['Insert in order', `${key} goes into its sorted position. Five keys overflow a four-slot page.`],
+          ['Split the records', `Keep ${left.length} keys in the left leaf and move ${right.length} into a new right leaf.`],
+          ['Copy up the separator', `Copy ${separator} into a new root. Keys below ${separator} go left. Keys at or above it go right.`],
+        ];
+        const [title, description] = steps[step];
+
+        if (step < 2) {
+          stage.innerHTML = step === 0
+            ? leaf('Root leaf', originalKeys)
+            : leaf('Overflowing leaf', sorted, key);
+        } else {
+          const root = step === 3
+            ? `<div class="root"><span class="node-label">New root</span><span class="key highlight">${separator}</span></div><div class="branches" aria-hidden="true"></div>`
+            : '';
+          stage.innerHTML = `<div class="tree">${root}<div class="leaves">${leaf('Left leaf', left, step === 2 ? key : undefined)}${leaf('Right leaf', right, step === 2 ? key : separator)}</div></div>`;
+        }
+        copy.innerHTML = `<strong>${title}</strong><p>${description}</p>`;
+        scrubber.value = String(step);
+        scrubber.setAttribute('aria-valuetext', title);
+        counter.textContent = `Step ${step + 1} of ${lastStep + 1}`;
+        previous.disabled = step === 0;
+        next.disabled = step === lastStep;
+        play.textContent = timer === undefined ? 'Play' : 'Pause';
+        buttons.forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.key) === key)));
+      }
+
+      function stop() {
+        window.clearInterval(timer);
+        timer = undefined;
+      }
+
+      function seek(value: number) {
+        stop();
+        step = Math.min(lastStep, Math.max(0, value));
+        render();
+      }
+
+      buttons.forEach(button => button.addEventListener('click', () => {
+        key = Number(button.dataset.key);
+        seek(0);
+      }));
+      previous.addEventListener('click', () => seek(step - 1));
+      next.addEventListener('click', () => seek(step + 1));
+      reset.addEventListener('click', () => seek(0));
+      scrubber.addEventListener('input', () => seek(scrubber.valueAsNumber));
+      play.addEventListener('click', () => {
+        if (timer !== undefined) {
+          stop();
+        } else {
+          if (step === lastStep) step = 0;
+          timer = window.setInterval(() => {
+            step += 1;
+            if (step === lastStep) stop();
+            render();
+          }, 1450);
+        }
+        render();
+      });
+
+      render();
+      controls.forEach(control => { control.hidden = false; });
+    }
+  }
+
+  if (!customElements.get('leaf-split')) customElements.define('leaf-split', LeafSplit);
+</script>
+
+<style is:global>
+  leaf-split { display: block; margin: 2.5rem 0 3.1rem; }
+  .split { margin: 0; padding: clamp(1rem, 3.5vw, 2rem); border-radius: 1rem; color: #e9f1df; background: #123b2f; }
+  .split-top, .split-inputs, .split-controls, .split .transport, .split .key-options { display: flex; align-items: center; gap: .55rem; }
+  .split [hidden] { display: none; }
+  .split-top { justify-content: space-between; gap: 1rem; margin-bottom: 1.15rem; }
+  .split .eyebrow { color: #abcca8; margin: 0; }
+  .split h2 { margin: .1rem 0 0; font-size: clamp(1.75rem, 5vw, 2.45rem); }
+  .split .engine { color: #dceba5; flex-shrink: 0; font: .72rem var(--mono); }
+  .split-inputs { gap: .8rem; margin-bottom: .9rem; color: #c6ddc5; font-size: .875rem; }
+  .split button { cursor: pointer; padding: .43rem .65rem; color: #edf3e7; background: #234d3e; border: 1px solid #71927b; border-radius: .32rem; font: 600 .875rem var(--sans); }
+  .split button:hover:not(:disabled) { background: #37604d; }
+  .split button[aria-pressed="true"], .split .play { background: #d0e99b; color: #19392c; border-color: #d0e99b; }
+  .split button[aria-pressed="true"]:hover, .split .play:hover:not(:disabled) { background: #e5f3c6; }
+  .split button:disabled { opacity: .48; cursor: default; }
+  .split button:focus-visible, .split input:focus-visible { outline: 2px solid #e5f3c6; outline-offset: 3px; }
+  .split .stage { display: grid; place-items: center; min-height: 12.75rem; border: 1px solid #557260; border-radius: .5rem; padding: .85rem .3rem; background: radial-gradient(#94b39c45 1px, transparent 1px) center / 16px 16px, #183e33; }
+  .split .leaf, .split .root { display: grid; justify-items: center; gap: .4rem; }
+  .split .node-label { color: #d6e8d3; background: #183e33; padding: 0 .2rem; font: 500 .7rem var(--mono); text-transform: uppercase; letter-spacing: .03em; }
+  .split .keys { display: flex; gap: .18rem; }
+  .split .key { display: grid; place-items: center; width: clamp(1.65rem, 4vw, 2.6rem); height: 2.2rem; border: 1px solid #789a82; border-radius: .28rem; color: #e9f3df; background: #245341; font: 500 .86rem var(--mono); }
+  .split .key.highlight { background: #d0e99b; color: #19392c; border-color: #d0e99b; animation: split-appear .3s ease both; }
+  .split .tree { display: grid; justify-items: center; width: min(100%, 27rem); }
+  .split .leaves { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .split .branches { position: relative; width: 50%; height: 1.15rem; margin-top: .75rem; border-inline: 1px solid #819f85; border-top: 1px solid #819f85; }
+  .split .branches::before { content: ''; position: absolute; left: 50%; bottom: 100%; height: .8rem; width: 1px; background: #819f85; }
+  .split .step-copy { margin: 1rem 0; min-height: 4rem; }
+  .split .step-copy p { margin: .2rem 0 0; color: #ccdfcd; font-size: .94rem; }
+  .split-controls { justify-content: space-between; flex-wrap: wrap; border-top: 1px solid #557260; padding-top: .9rem; }
+  .split .scrubber { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; font: .75rem var(--mono); }
+  .split .scrubber input { width: 6rem; accent-color: #d0e99b; }
+  .split-status:empty { display: none; }
+  @keyframes split-appear { from { opacity: .5; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .split .key.highlight { animation: none; } }
+</style>

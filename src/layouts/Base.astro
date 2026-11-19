@@ -1,0 +1,48 @@
+---
+import '../styles/global.css';
+import { sitePath } from '../site';
+
+interface Props {
+  title: string;
+  description: string;
+  section?: 'home' | 'blog';
+}
+
+const { title, description, section } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={sitePath('favicon.svg')} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <a href="#content" class="skip">Skip to content</a>
+    <header class="shell site-header">
+      <a class="brand" href={sitePath()} aria-label="Arjun, home"><span aria-hidden="true" class="brand-mark">a.</span> Arjun</a>
+      <nav aria-label="Main navigation">
+        <a href={sitePath('#projects')}>Projects</a>
+        <a href={sitePath('posts/')} aria-current={section === 'blog' ? 'page' : undefined}>Blog</a>
+        <a class="github-link" href="https://github.com/arjunsk">GitHub</a>
+      </nav>
+    </header>
+    <main id="content" class="shell">
+      <slot />
+    </main>
+    <footer class="shell site-footer">
+      <a class="brand" href={sitePath()}><span aria-hidden="true" class="brand-mark">a.</span> Arjun</a>
+      <a href="https://github.com/arjunsk">Find me on GitHub</a>
+    </footer>
+  </body>
+</html>
