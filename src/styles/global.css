@@ -31,7 +31,7 @@ h1, h2, h3, p { overflow-wrap: break-word; }
   margin-inline: auto;
 }
 
-.shell.home-shell { width: min(100% - 2.5rem, 64rem); }
+.shell.home-shell { width: min(100% - 2.5rem, 58rem); }
 
 .skip {
   position: absolute;

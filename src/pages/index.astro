@@ -55,29 +55,29 @@ const latest = posts[0];
 <style>
   .home-intro {
     display: grid;
-    gap: 1.75rem;
-    align-items: center;
-    padding-block: clamp(2.5rem, 7vw, 5rem);
+    gap: 1.1rem;
+    align-items: start;
+    padding-block: clamp(1.35rem, 3vw, 2rem);
   }
 
   .home-heading h1 {
     margin: 0;
-    font-size: clamp(2.5rem, 5vw, 3.65rem);
+    font-size: clamp(2rem, 4vw, 2.75rem);
     font-weight: 650;
     letter-spacing: -.055em;
   }
 
   .home-heading p {
-    max-width: 34ch;
-    margin: .75rem 0 0;
+    max-width: 54ch;
+    margin: .4rem 0 0;
     color: var(--muted);
-    font-size: clamp(1.05rem, 2vw, 1.3rem);
+    font-size: 1.05rem;
     text-wrap: pretty;
   }
 
   .home-details {
     display: grid;
-    gap: 1.1rem;
+    gap: .65rem;
     margin: 0;
     padding-inline-start: 1rem;
     border-inline-start: 1px solid var(--border);
@@ -95,8 +95,8 @@ const latest = posts[0];
 
   .home-sections {
     display: grid;
-    gap: 2rem;
-    padding-block-start: 1.65rem;
+    gap: 1.45rem;
+    padding-block-start: 1.25rem;
     border-block-start: 1px solid var(--border);
   }
 
@@ -104,7 +104,7 @@ const latest = posts[0];
 
   .featured-post {
     display: block;
-    padding: clamp(1.1rem, 3vw, 1.6rem);
+    padding: clamp(1rem, 2vw, 1.25rem);
     border: 1px solid var(--border);
     border-radius: .55rem;
     background: linear-gradient(125deg, color-mix(in srgb, var(--surface), var(--accent) 5%), var(--surface) 72%);
@@ -136,9 +136,9 @@ const latest = posts[0];
   @media (min-width: 48rem) {
     .home-intro, .home-sections {
       grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
-      column-gap: clamp(2.5rem, 6vw, 5rem);
+      column-gap: clamp(1.65rem, 3.5vw, 2.5rem);
     }
 
-    .home-details { padding-inline-start: 1.5rem; }
+    .home-details { padding-inline-start: 1.25rem; }
   }
 </style>
