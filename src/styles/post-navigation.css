@@ -7,7 +7,8 @@
 
 .post-content { min-width: 0; }
 .post-content .post-header { margin-block-start: 0; }
-.post-content .prose :is(h2, h3)[id] { scroll-margin-block-start: 1.5rem; }
+.post-content .prose :is(h1, h2, h3)[id] { scroll-margin-block-start: 1.5rem; }
+.heading-anchor { display: block; }
 
 .chapter-rail, .outline-rail {
   align-self: start;

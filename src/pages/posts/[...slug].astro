@@ -37,7 +37,8 @@ interface Props {
 
 const { post, chapters } = Astro.props;
 const { Content, headings } = await render(post);
-const outline = headings.filter(({ depth }) => depth === 2 || depth === 3);
+const outline = headings.filter(({ depth }) => depth <= 3);
+const outlineRootDepth = outline.some(({ depth }) => depth === 1) ? 1 : 2;
 const { title, summary, date, topic } = post.data;
 ---
 <Base title={title} description={summary} section="blog" wide>
@@ -86,7 +87,7 @@ const { title, summary, date, topic } = post.data;
             <nav aria-label="On this page">
               <ul class="rail-list">
                 {outline.map(({ slug, text, depth }) => (
-                  <li class:list={[{ 'outline-subheading': depth === 3 }]}>
+                  <li class:list={[{ 'outline-subheading': depth > outlineRootDepth }]}>
                     <a href={`#${encodeURIComponent(slug)}`}>{text}</a>
                   </li>
                 ))}

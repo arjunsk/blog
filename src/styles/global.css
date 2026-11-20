@@ -109,6 +109,7 @@ main.shell { padding-bottom: clamp(3rem, 9vw, 6rem); }
 .back-link { display: inline-block; color: var(--muted); font-size: .875rem; margin-bottom: 1.15rem; }
 .eyebrow { color: var(--muted); font: .8rem/1.5 var(--mono); margin: 0 0 .75rem; }
 .prose > p { margin: .8rem 0 1.3rem; }
+.prose > h1 { margin: 2.5rem 0 .85rem; font-size: 1.75rem; font-weight: 650; }
 .prose > h2 { margin: 2rem 0 .65rem; font-size: 1.35rem; font-weight: 650; }
 .prose a { color: var(--accent); }
 .prose code { padding: .1em .31em; border-radius: .22em; background: var(--raised); font: .9em var(--mono); }
