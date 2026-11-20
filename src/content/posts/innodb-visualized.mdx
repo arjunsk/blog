@@ -1,13 +1,13 @@
 ---
 title: "InnoDB Internals, Visualized"
-summary: "Four interactive diagrams trace how InnoDB stores a row, records an update, reads an older version, and recovers a torn page."
+summary: "Two interactive diagrams follow the InnoDB write path through clustered index page splits, undo, and redo."
 date: 2026-11-19
 topic: "Database internals"
 ---
 
 import InnoDbFigure from '../../components/InnoDbFigure.astro';
 
-A row update starts with a lookup in an index. Its effects then reach the undo log, the redo log, and eventually the data file. These four simulations follow that path, including what a concurrent reader sees and what a crash can leave behind.
+The first simulation shows how an insert can split a clustered index page. The second follows a row update through the buffer pool, undo log, and redo log.
 
 # Write path
 
@@ -26,15 +26,3 @@ The leaves of an InnoDB clustered index contain the rows, ordered by the cluster
 Try **BEGIN**, **INSERT**, and **UPDATE name**. Watch the row change in the buffer pool while an undo record saves the old value and redo records accumulate. **COMMIT** flushes redo in this model. The data page can stay dirty until a later flush. [InnoDB redo log](https://dev.mysql.com/doc/dev/mysql-server/8.4.11/PAGE_INNODB_REDO_LOG.html)
 
 <InnoDbFigure kind="update" />
-
-# Read an older version with MVCC
-
-A reader opens a snapshot while another transaction changes a balance from **$100** to **$50**. Step through the four events to compare how InnoDB can walk back through undo and how PostgreSQL can examine retained tuple versions.
-
-<InnoDbFigure kind="mvcc" />
-
-# Recover a torn page with doublewrite
-
-A crash during a data-file write can leave a page partly old and partly new. With doublewrite recovery enabled, InnoDB can restore a complete copy before applying redo. Press **Crash now**, then **Step** to follow the recovery. [MySQL doublewrite buffer documentation](https://dev.mysql.com/doc/refman/8.4/en/innodb-doublewrite-buffer.html)
-
-<InnoDbFigure kind="doublewrite" />

@@ -18,7 +18,6 @@ export function mountUpdate(section) {
       undoHeader: null,
       redoBuf: [],
       lsn: 100,
-      readView: null,        // { upLimit: number } when open
       committed: false,
       lastHighlight: null
     };
@@ -77,52 +76,27 @@ export function mountUpdate(section) {
     state.phase = 'committed';
     if (state.undoHeader) state.undoHeader.state = 'TRX_UNDO_TO_PURGE';
     state.trxNo = 100;
-    log(`<code>COMMIT tx_100</code>: redo log buffer fsynced. <code>INSERT-undo</code> will be discarded; <code>UPDATE-undo</code> joins rseg 0's history list. A read view opened after commit can see this transaction.`);
+    log(`<code>COMMIT tx_100</code>: redo log buffer fsynced. <code>INSERT-undo</code> will be discarded; <code>UPDATE-undo</code> joins rseg 0's history list.`);
     render();
   }
-  function openRv() {
-    // m_up_limit_id = smallest currently-active trx_id (real InnoDB rule).
-    //   - If tx_100 is in flight (BEGIN run, COMMIT not yet)        → upLimit = 100  → PINS tx_100
-    //   - If no trx is active (idle, or tx_100 already committed)   → upLimit = 101  → sees tx_100 → does NOT pin
-    const trxNum = parseInt(state.trxId.split('_')[1], 10);    // 100
-    const inFlight = state.row && !state.committed;            // BEGIN/INSERT/UPDATE done, COMMIT not yet
-    const upLimit  = inFlight ? trxNum : trxNum + 1;
-    state.readView = { upLimit };
-    if (inFlight) {
-      log(`ReadView opened with <code>m_up_limit_id = ${upLimit}</code>. Pins the active <code>tx_${trxNum}</code> — purge cannot reclaim its undo until this RV closes.`);
-    } else if (state.committed) {
-      log(`ReadView opened with <code>m_up_limit_id = ${upLimit}</code>. Sees <code>tx_${trxNum}</code> as already committed (${trxNum} &lt; ${upLimit}) → does NOT pin its undo. Purge can still reclaim.`);
-    } else {
-      log(`ReadView opened with <code>m_up_limit_id = ${upLimit}</code>. No transaction has run yet — nothing to pin.`);
+  const actions = {
+    begin,
+    insert,
+    update,
+    commit,
+    reset() {
+      reset();
+      log('— reset —');
+      render();
     }
-    render();
-  }
-  function closeRv() {
-    state.readView = null;
-    log('ReadView closed. Purge boundary released.');
-    render();
-  }
-  function purge() {
-    if (!state.committed) { log('Nothing committed yet to purge.'); return; }
-    const trxNum = parseInt(state.trxId.split('_')[1], 10);
-    // Purge cutoff = the open RV's m_up_limit_id (or +∞ if no RV).
-    // tx is reclaimable iff trx_no < cutoff.
-    const cutoff = state.readView ? state.readView.upLimit : Infinity;
-    if (trxNum < cutoff) {
-      state.undo = state.undo.filter(u => u.type !== 'UPD_EXIST');
-      log(`Purge cycle: cutoff <code>trx_no &lt; ${cutoff === Infinity ? '∞' : cutoff}</code>. <code>tx_${trxNum}</code>'s update_undo reclaimed (insert_undo was already discarded at COMMIT).`);
-    } else {
-      log(`Cannot purge: an open ReadView pins this trx (m_up_limit_id = ${cutoff} ≤ ${trxNum}). Close the ReadView first.`);
-    }
-    render();
-  }
+  };
 
-  ['begin','insert','update','commit','openrv','closerv','purge','reset'].forEach(act => {
-    section.querySelector(`[data-act="${act}"]`).addEventListener('click', () => {
-      ({ begin, insert, update, commit, openrv:openRv, closerv:closeRv, purge, reset:()=>{reset();log('— reset —');render();} })[act]();
+  for (const [action, handler] of Object.entries(actions)) {
+    section.querySelector(`[data-act="${action}"]`).addEventListener('click', () => {
+      handler();
       updateBtns();
     });
-  });
+  }
 
   // Enable / disable the action buttons so the user can only press what makes
   // sense at the current phase — avoids accumulating bogus state.
@@ -133,9 +107,6 @@ export function mountUpdate(section) {
     has('insert',  state.phase === 'begin' && !state.row);
     has('update',  inFlight);
     has('commit',  inFlight);
-    has('openrv',  !state.readView);
-    has('closerv', !!state.readView);
-    has('purge',   state.committed);
     has('reset',   true);
   }
 
@@ -151,9 +122,8 @@ export function mountUpdate(section) {
 
   // Geometry — kept as named constants so the arrow knows where it starts/ends.
   const GEOM = {
-    bp:  { x: 16,  y: 16,  w: 580, h: 200 },
+    bp:  { x: 16,  y: 16,  w: 580, h: 280 },
     rb:  { x: 612, y: 16,  w: 332, h: 200 },
-    rv:  { x: 16,  y: 232, w: 580, h: 64  },
     rf:  { x: 612, y: 232, w: 332, h: 64  },
     ut:  { x: 16,  y: 312, w: 928, h: 372 }
   };
@@ -185,7 +155,7 @@ export function mountUpdate(section) {
   // Inside BUFFER POOL row of cells
   function bpCellBox(i) {
     const cellW = 132, cellH = 90, gap = 6;
-    const startX = 32, y = 92;
+    const startX = 32, y = 126;
     return { x: startX + i * (cellW + gap), y, w: cellW, h: cellH };
   }
 
@@ -233,28 +203,7 @@ export function mountUpdate(section) {
        .attr('font-size', 10).attr('fill', 'var(--accent)').text(r.type.split(' · ')[0]);
     });
 
-    // ===== ③ READVIEW (narrow strip below buffer pool) =====
-    // Title carries the dynamic state; body line shows whether this RV pins
-    // the committed trx or not (depends on whether m_up_limit_id ≤ trx_no).
-    const trxNum = parseInt(state.trxId.split('_')[1], 10);
-    const rv = state.readView;
-    const pins = !!rv && trxNum < rv.upLimit ? false : !!rv;   // pins iff cutoff ≤ trx_no
-    panel(s, GEOM.rv.x, GEOM.rv.y, GEOM.rv.w, GEOM.rv.h,
-      rv ? `READVIEW · OPEN · m_up_limit_id=${rv.upLimit}` : 'READVIEW · no snapshot',
-      null,
-      rv ? (pins ? 'var(--err)' : 'var(--blue)') : 'var(--border)');
-    {
-      const bodyY = GEOM.rv.y + GEOM.rv.h - 12;
-      const txt = !rv ? 'purge can reclaim committed undo'
-                : pins  ? `pins tx_${trxNum} → purge blocked`
-                        : `tx_${trxNum} committed before snapshot → not pinned`;
-      s.append('text').attr('x', GEOM.rv.x + 16).attr('y', bodyY)
-       .attr('class', 'lbl-mono-dim').attr('font-size', 10)
-       .attr('fill', pins ? 'var(--err)' : 'var(--ink-dim)')
-       .text(txt);
-    }
-
-    // ===== ④ REDO LOG FILE (narrow strip right of readview) =====
+    // ===== ③ REDO LOG FILE =====
     panel(s, GEOM.rf.x, GEOM.rf.y, GEOM.rf.w, GEOM.rf.h,
       state.committed
         ? `REDO LOG FILE · ${state.redoBuf.length} fsynced`
@@ -270,7 +219,7 @@ export function mountUpdate(section) {
               : 'buffer in RAM only');
     }
 
-    // ===== ⑤ UNDO TABLESPACE =====
+    // ===== ④ UNDO TABLESPACE =====
     panel(s, GEOM.ut.x, GEOM.ut.y, GEOM.ut.w, GEOM.ut.h, "UNDO TABLESPACE · TX_100'S UNDO PAGES",
       state.committed ? 'COMMITTED · ON HISTORY LIST' : 'IN PROGRESS · UNCOMMITTED');
 
@@ -403,20 +352,13 @@ export function mountUpdate(section) {
        .text('purple ← = PREV_ROLL_PTR (chain to older version)');
     }
 
-    // ===== ⑥ DB_ROLL_PTR ARROW (the clean one) =====
+    // ===== ⑤ DB_ROLL_PTR ARROW (the clean one) =====
     if (state.row && state.undo.length) {
       drawRollPtrArrow(arrows.flow);
     }
   }
 
-  // Draw a clean polyline from the DB_ROLL_PTR cell down to the latest undo record.
-  // The path stays strictly in empty channels:
-  //   1. Diagonal down-right from the cell into the BP-RV gap (y=216..232).
-  //   2. Vertical down through the 16 px gap between RV (ends x=596) and RF
-  //      (starts x=612), centered at x=604.
-  //   3. Diagonal across the RF-UT gap (y=296..312) toward above the target.
-  //   4. Vertical drop into the top of the target undo card.
-  // Rounded line joins keep the corners visually smooth.
+  // Route the roll pointer through the gap above the undo tablespace.
   function drawRollPtrArrow(markerUrl) {
     const s = svg();
     const cell = bpCellBox(3);
@@ -429,18 +371,8 @@ export function mountUpdate(section) {
     const endX = tgt.x + tgt.w / 2;
     const endY = tgt.y;
 
-    // Channel waypoints — pinned to the actual layout gaps so the arrow can
-    // never cross a panel as long as GEOM stays consistent.
-    const channelX  = (GEOM.rv.x + GEOM.rv.w + GEOM.rf.x) / 2;     // center of RV-RF gap (≈604)
-    const channelY1 = (GEOM.bp.y + GEOM.bp.h + GEOM.rv.y) / 2;     // center of BP-RV gap (≈224)
-    const channelY2 = (GEOM.rv.y + GEOM.rv.h + GEOM.ut.y) / 2;     // center of RF-UT gap (≈304)
-    const approachY = endY - 12;
-
-    const path = `M${startX},${startY}` +
-                 ` L${channelX},${channelY1}` +
-                 ` L${channelX},${channelY2}` +
-                 ` L${endX},${approachY}` +
-                 ` L${endX},${endY}`;
+    const channelY = (GEOM.bp.y + GEOM.bp.h + GEOM.ut.y) / 2;
+    const path = `M${startX},${startY} V${channelY} H${endX} V${endY}`;
 
     s.append('path')
      .attr('d', path)
