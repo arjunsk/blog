@@ -1,6 +1,19 @@
+# Dependencies and generated output
 node_modules/
-dist/
-.astro/
-.env*
-.DS_Store
+/dist/
+/.astro/
 /public/leaf-split.wasm
+
+# Local environment files
+.env*
+!.env.example
+
+# Editor and OS files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# npm logs
+npm-debug.log*
