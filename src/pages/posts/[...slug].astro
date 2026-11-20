@@ -44,7 +44,10 @@ const { title, summary, date, topic } = post.data;
   <div class="post-layout">
     <aside class="chapter-rail" aria-label="Chapter navigation">
       <details class="rail-panel" data-post-menu open>
-        <summary class="rail-title">Chapters</summary>
+        <summary class="rail-title" title="Chapters">
+          <span class="rail-title-label">Chapters</span>
+          <span class="rail-title-icon" aria-hidden="true"></span>
+        </summary>
         <nav aria-label="Chapters">
           {chapters.map(chapter => (
             <details class="chapter-group" open={chapter.topic === topic}>
@@ -76,7 +79,10 @@ const { title, summary, date, topic } = post.data;
       {outline.length > 0 && (
         <aside class="outline-rail" aria-label="Article outline">
           <details class="rail-panel" data-post-menu data-outline open>
-            <summary class="rail-title">On this page</summary>
+            <summary class="rail-title" title="On this page">
+              <span class="rail-title-label">On this page</span>
+              <span class="rail-title-icon" aria-hidden="true"></span>
+            </summary>
             <nav aria-label="On this page">
               <ul class="rail-list">
                 {outline.map(({ slug, text, depth }) => (
