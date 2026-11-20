@@ -1,0 +1,49 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="About" description="About AutoInc, database projects, and what I’m learning." section="about">
+  <header class="page-heading about-heading">
+    <h1>About</h1>
+    <p>Hey! I build small systems and write about how databases work.</p>
+  </header>
+
+  <dl class="about-details">
+    <div>
+      <dt>Currently learning</dt>
+      <dd>MySQL internals, gRPC</dd>
+    </div>
+    <div>
+      <dt>Database projects involved</dt>
+      <dd>
+        <a href="https://aws.amazon.com/rds/aurora/">AWS Aurora</a>,
+        <a href="https://github.com/matrixorigin/matrixone">matrixone</a>
+      </dd>
+    </div>
+  </dl>
+</Base>
+
+<style>
+  .about-heading { margin-block: clamp(1.5rem, 4vw, 2.25rem) 1.35rem; }
+
+  .about-details {
+    margin: 0;
+    border-block-end: 1px solid var(--border);
+    font-size: .95rem;
+    line-height: 1.5;
+  }
+
+  .about-details > div {
+    display: grid;
+    gap: .25rem 1rem;
+    padding-block: .75rem;
+    border-block-start: 1px solid var(--border);
+  }
+
+  .about-details dt { color: var(--muted); }
+  .about-details dd { margin: 0; }
+  .about-details a { text-decoration-color: var(--control-border); }
+
+  @media (min-width: 32rem) {
+    .about-details > div { grid-template-columns: 13rem minmax(0, 1fr); }
+  }
+</style>

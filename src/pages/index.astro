@@ -1,31 +1,12 @@
 ---
 import Base from '../layouts/Base.astro';
-import { formatDate, getVisiblePosts, projects, siteName, sitePath } from '../site';
+import { formatDate, getVisiblePosts, projects, sitePath } from '../site';
 
 const posts = (await getVisiblePosts()).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 const latest = posts[0];
 ---
 <Base title="Systems notes and projects" description="Projects and interactive notes on database internals." home>
-  <header class="home-intro">
-    <div class="home-heading">
-      <h1>{siteName}</h1>
-      <p>Hey! I build small systems and write about how databases work.</p>
-    </div>
-
-    <dl class="home-details">
-      <div>
-        <dt>Currently learning</dt>
-        <dd>MySQL internals, gRPC</dd>
-      </div>
-      <div>
-        <dt>Database projects involved</dt>
-        <dd>
-          <a href="https://aws.amazon.com/rds/aurora/">AWS Aurora</a>,
-          <a href="https://github.com/matrixorigin/matrixone">matrixone</a>
-        </dd>
-      </div>
-    </dl>
-  </header>
+  <h1 class="home-title">Posts and projects</h1>
 
   <div class="home-sections">
     {latest && (
@@ -53,51 +34,19 @@ const latest = posts[0];
 </Base>
 
 <style>
-  .home-intro {
-    display: grid;
-    gap: 1.1rem;
-    align-items: start;
-    padding-block: clamp(1.35rem, 3vw, 2rem);
+  .home-title {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
-
-  .home-heading h1 {
-    margin: 0;
-    font-size: clamp(2rem, 4vw, 2.75rem);
-    font-weight: 650;
-    letter-spacing: -.055em;
-  }
-
-  .home-heading p {
-    max-width: 54ch;
-    margin: .4rem 0 0;
-    color: var(--muted);
-    font-size: 1.05rem;
-    text-wrap: pretty;
-  }
-
-  .home-details {
-    display: grid;
-    gap: .65rem;
-    margin: 0;
-    padding-inline-start: 1rem;
-    border-inline-start: 1px solid var(--border);
-  }
-
-  .home-details dt {
-    margin-block-end: .25rem;
-    color: var(--muted);
-    font-size: .8rem;
-    font-weight: 550;
-  }
-
-  .home-details dd { margin: 0; font-size: .95rem; line-height: 1.5; }
-  .home-details a { text-decoration-color: var(--control-border); }
 
   .home-sections {
     display: grid;
     gap: 1.45rem;
-    padding-block-start: 1.25rem;
-    border-block-start: 1px solid var(--border);
+    padding-block-start: clamp(1.35rem, 3vw, 2rem);
   }
 
   .home-sections h2 { margin: 0 0 .85rem; font-size: 1rem; font-weight: 650; }
@@ -134,11 +83,9 @@ const latest = posts[0];
   }
 
   @media (min-width: 48rem) {
-    .home-intro, .home-sections {
+    .home-sections {
       grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
       column-gap: clamp(1.65rem, 3.5vw, 2.5rem);
     }
-
-    .home-details { padding-inline-start: 1.25rem; }
   }
 </style>
