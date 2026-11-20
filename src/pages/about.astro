@@ -1,5 +1,6 @@
 ---
 import Base from '../layouts/Base.astro';
+import { projects } from '../site';
 ---
 <Base title="About" description="About AutoInc, database projects, and what I’m learning." section="about">
   <header class="page-heading about-heading">
@@ -20,6 +21,15 @@ import Base from '../layouts/Base.astro';
       </dd>
     </div>
   </dl>
+
+  <section class="content-section projects" id="projects" aria-labelledby="projects-title">
+    <h2 id="projects-title">Personal projects</h2>
+    <ul class="project-links">
+      {projects.map(project => (
+        <li><a href={project.url}>{project.name}</a></li>
+      ))}
+    </ul>
+  </section>
 </Base>
 
 <style>
@@ -42,6 +52,21 @@ import Base from '../layouts/Base.astro';
   .about-details dt { color: var(--muted); }
   .about-details dd { margin: 0; }
   .about-details a { text-decoration-color: var(--control-border); }
+
+  .projects { margin-block-start: 1.85rem; }
+  .projects h2 { margin-block-end: .65rem; font-size: 1rem; }
+
+  .project-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem 1.2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: .95rem;
+  }
+
+  .project-links a { text-decoration-color: var(--control-border); }
 
   @media (min-width: 32rem) {
     .about-details > div { grid-template-columns: 13rem minmax(0, 1fr); }

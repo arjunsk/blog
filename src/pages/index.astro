@@ -1,43 +1,18 @@
 ---
 import Base from '../layouts/Base.astro';
 import PostList from '../components/PostList.astro';
-import { getVisiblePosts, projects } from '../site';
+import { getVisiblePosts } from '../site';
 
 const posts = (await getVisiblePosts()).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 ---
-<Base title="Systems notes and projects" description="Projects and interactive notes on database internals.">
+<Base title="Systems notes" description="Interactive notes on database internals.">
   <header class="page-heading home-heading">
     <h1>Posts</h1>
   </header>
 
   <PostList posts={posts.slice(0, 3)} />
-
-  <section class="content-section projects" id="projects" aria-labelledby="projects-title">
-    <h2 id="projects-title">Personal projects</h2>
-    <ul class="project-links">
-      {projects.map(project => (
-        <li><a href={project.url}>{project.name}</a></li>
-      ))}
-    </ul>
-  </section>
 </Base>
 
 <style>
   .home-heading { margin-block: clamp(1.65rem, 4vw, 2.5rem) 1rem; }
-  .home-heading h1 { font-size: clamp(1.8rem, 4vw, 2.35rem); }
-
-  .projects { margin-block-start: 1.85rem; }
-  .projects h2 { margin-block-end: .65rem; font-size: 1rem; }
-
-  .project-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .45rem 1.2rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: .95rem;
-  }
-
-  .project-links a { text-decoration-color: var(--control-border); }
-</style>
+  .home-heading h1 { font-size: clamp(1.8rem, 4vw, 2.35rem); }</style>
