@@ -1,18 +1,4 @@
 ---
-import Base from '../layouts/Base.astro';
-import PostList from '../components/PostList.astro';
-import { getVisiblePosts } from '../site';
-
-const posts = (await getVisiblePosts()).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+import BlogIndex from '../components/BlogIndex.astro';
 ---
-<Base title="Systems notes" description="Interactive notes on database internals.">
-  <header class="page-heading home-heading">
-    <h1>Posts</h1>
-  </header>
-
-  <PostList posts={posts.slice(0, 3)} />
-</Base>
-
-<style>
-  .home-heading { margin-block: clamp(1.65rem, 4vw, 2.5rem) 1rem; }
-  .home-heading h1 { font-size: clamp(1.8rem, 4vw, 2.35rem); }</style>
+<BlogIndex />

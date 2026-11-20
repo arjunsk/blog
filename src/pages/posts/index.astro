@@ -1,14 +1,4 @@
 ---
-import Base from '../../layouts/Base.astro';
-import PostList from '../../components/PostList.astro';
-import { getVisiblePosts } from '../../site';
-
-const posts = (await getVisiblePosts()).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+import BlogIndex from '../../components/BlogIndex.astro';
 ---
-<Base title="Blog" description="Technical notes on databases and data structures, with interactive examples." section="blog">
-  <header class="page-heading">
-    <h1>Blog</h1>
-    <p>Notes on the internals of databases and the data structures they depend on.</p>
-  </header>
-  <PostList posts={posts} />
-</Base>
+<BlogIndex />
