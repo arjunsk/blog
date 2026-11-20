@@ -31,6 +31,8 @@ h1, h2, h3, p { overflow-wrap: break-word; }
   margin-inline: auto;
 }
 
+.shell.home-shell { width: min(100% - 2.5rem, 64rem); }
+
 .skip {
   position: absolute;
   top: .75rem;
@@ -58,7 +60,7 @@ h1, h2, h3, p { overflow-wrap: break-word; }
 .brand img { display: block; }
 
 @media (min-width: 56rem) {
-  .site-header .brand {
+  .site-header:not(.home-shell) .brand {
     position: absolute;
     inset-inline-start: clamp(1.25rem, 3vw, 3rem);
     inset-block-start: 1.06rem;

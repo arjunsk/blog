@@ -5,57 +5,140 @@ import { formatDate, getVisiblePosts, projects, siteName, sitePath } from '../si
 const posts = (await getVisiblePosts()).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 const latest = posts[0];
 ---
-<Base title="Systems notes and projects" description="Projects and interactive notes on database internals.">
-  <header class="page-heading home-intro">
-    <h1>{siteName}</h1>
-    <p>Hey! I build small systems and write about how databases work.</p>
-    <div class="intro-details">
-      <p><strong>Currently Learning:</strong> MySQL internals, gRPC</p>
-      <p>
-        <strong>Database Projects Involved:</strong>
-        <a href="https://aws.amazon.com/rds/aurora/">AWS Aurora</a>,
-        <a href="https://github.com/matrixorigin/matrixone">matrixone</a>
-      </p>
-      <p class="project-links" id="projects">
-        <strong>Personal Projects:</strong>
-        {projects.map((project, index) => (
-          <span><a href={project.url}>{project.name}</a>{index < projects.length - 1 ? ',' : ''}</span>
-        ))}
-      </p>
+<Base title="Systems notes and projects" description="Projects and interactive notes on database internals." home>
+  <header class="home-intro">
+    <div class="home-heading">
+      <h1>{siteName}</h1>
+      <p>Hey! I build small systems and write about how databases work.</p>
     </div>
+
+    <dl class="home-details">
+      <div>
+        <dt>Currently learning</dt>
+        <dd>MySQL internals, gRPC</dd>
+      </div>
+      <div>
+        <dt>Database projects involved</dt>
+        <dd>
+          <a href="https://aws.amazon.com/rds/aurora/">AWS Aurora</a>,
+          <a href="https://github.com/matrixorigin/matrixone">matrixone</a>
+        </dd>
+      </div>
+    </dl>
   </header>
 
-  {latest && (
-    <section class="content-section" aria-labelledby="latest-title">
-      <h2 id="latest-title">Latest post</h2>
-      <div class="reading-list">
-        <article class="reading-row">
-          <div>
-            <h3><a href={sitePath(`posts/${latest.id}/`)}>{latest.data.title}</a></h3>
+  <div class="home-sections">
+    {latest && (
+      <section aria-labelledby="latest-title">
+        <h2 id="latest-title">Latest post</h2>
+        <article>
+          <a class="featured-post" href={sitePath(`posts/${latest.id}/`)} aria-labelledby="featured-post-title">
+            <time datetime={latest.data.date.toISOString().slice(0, 10)}>{formatDate(latest.data.date)}</time>
+            <h3 id="featured-post-title">{latest.data.title}</h3>
             <p>{latest.data.summary}</p>
-          </div>
-          <time datetime={latest.data.date.toISOString().slice(0, 10)}>{formatDate(latest.data.date)}</time>
+          </a>
         </article>
-      </div>
+      </section>
+    )}
+
+    <section id="projects" aria-labelledby="projects-title">
+      <h2 id="projects-title">Personal projects</h2>
+      <ul class="project-list">
+        {projects.map(project => (
+          <li><a href={project.url}>{project.name}</a></li>
+        ))}
+      </ul>
     </section>
-  )}
+  </div>
 </Base>
 
 <style>
-  .home-intro h1 { font-size: clamp(1.8rem, 4vw, 2.25rem); }
-  .home-intro p { font-size: .9375rem; }
-  .intro-details { margin-top: .65rem; }
-  .intro-details p { margin: .2rem 0 0; }
-  .intro-details strong { color: var(--text); font-weight: 550; }
-
-  .project-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .1rem .35rem;
-    scroll-margin-top: 1.75rem;
+  .home-intro {
+    display: grid;
+    gap: 1.75rem;
+    align-items: center;
+    padding-block: clamp(2.5rem, 7vw, 5rem);
   }
 
-  .project-links a { white-space: nowrap; }
-  .intro-details a { text-decoration-color: var(--control-border); }
-  .intro-details a:hover { text-decoration-color: currentColor; }
+  .home-heading h1 {
+    margin: 0;
+    font-size: clamp(2.5rem, 5vw, 3.65rem);
+    font-weight: 650;
+    letter-spacing: -.055em;
+  }
+
+  .home-heading p {
+    max-width: 34ch;
+    margin: .75rem 0 0;
+    color: var(--muted);
+    font-size: clamp(1.05rem, 2vw, 1.3rem);
+    text-wrap: pretty;
+  }
+
+  .home-details {
+    display: grid;
+    gap: 1.1rem;
+    margin: 0;
+    padding-inline-start: 1rem;
+    border-inline-start: 1px solid var(--border);
+  }
+
+  .home-details dt {
+    margin-block-end: .25rem;
+    color: var(--muted);
+    font-size: .8rem;
+    font-weight: 550;
+  }
+
+  .home-details dd { margin: 0; font-size: .95rem; line-height: 1.5; }
+  .home-details a { text-decoration-color: var(--control-border); }
+
+  .home-sections {
+    display: grid;
+    gap: 2rem;
+    padding-block-start: 1.65rem;
+    border-block-start: 1px solid var(--border);
+  }
+
+  .home-sections h2 { margin: 0 0 .85rem; font-size: 1rem; font-weight: 650; }
+
+  .featured-post {
+    display: block;
+    padding: clamp(1.1rem, 3vw, 1.6rem);
+    border: 1px solid var(--border);
+    border-radius: .55rem;
+    background: linear-gradient(125deg, color-mix(in srgb, var(--surface), var(--accent) 5%), var(--surface) 72%);
+    text-decoration: none;
+  }
+
+  .featured-post:is(:hover, :focus-visible) { border-color: var(--control-border); }
+  .featured-post time { color: var(--muted); font: .8rem/1.4 var(--mono); }
+  .featured-post h3 { margin: .65rem 0 .5rem; font-size: clamp(1.2rem, 2.5vw, 1.5rem); font-weight: 620; }
+  .featured-post p { max-width: 54ch; margin: 0; color: var(--muted); font-size: .95rem; }
+
+  #projects { scroll-margin-block-start: 1.75rem; }
+
+  .project-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-block-start: 1px solid var(--border);
+  }
+
+  .project-list a {
+    display: block;
+    padding-block: .8rem;
+    border-block-end: 1px solid var(--border);
+    font-size: .95rem;
+    text-decoration-color: var(--control-border);
+  }
+
+  @media (min-width: 48rem) {
+    .home-intro, .home-sections {
+      grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+      column-gap: clamp(2.5rem, 6vw, 5rem);
+    }
+
+    .home-details { padding-inline-start: 1.5rem; }
+  }
 </style>
