@@ -7,10 +7,9 @@ interface Props {
   description: string;
   section?: 'blog' | 'about';
   wide?: boolean;
-  home?: boolean;
 }
 
-const { title, description, section, wide = false, home = false } = Astro.props;
+const { title, description, section, wide = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const pageTitle = `${title} — ${siteName}`;
 ---
@@ -32,7 +31,7 @@ const pageTitle = `${title} — ${siteName}`;
   </head>
   <body>
     <a href="#content" class="skip">Skip to content</a>
-    <header class:list={['shell', 'site-header', { 'wide-shell': wide, 'home-shell': home }]}>
+    <header class:list={['shell', 'site-header', { 'wide-shell': wide }]}>
       <a class="brand" href={sitePath()} aria-label={`${siteName}, home`}>
         <img src={sitePath('autoinc.svg')} alt="" width="79" height="34" />
       </a>
@@ -43,7 +42,7 @@ const pageTitle = `${title} — ${siteName}`;
         <a href="https://github.com/arjunsk">GitHub</a>
       </nav>
     </header>
-    <main id="content" class:list={['shell', { 'wide-shell': wide, 'home-shell': home }]}>
+    <main id="content" class:list={['shell', { 'wide-shell': wide }]}>
       <slot />
     </main>
   </body>

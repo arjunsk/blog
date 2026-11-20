@@ -1,91 +1,43 @@
 ---
 import Base from '../layouts/Base.astro';
-import { formatDate, getVisiblePosts, projects, sitePath } from '../site';
+import PostList from '../components/PostList.astro';
+import { getVisiblePosts, projects } from '../site';
 
 const posts = (await getVisiblePosts()).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
-const latest = posts[0];
 ---
-<Base title="Systems notes and projects" description="Projects and interactive notes on database internals." home>
-  <h1 class="home-title">Posts and projects</h1>
+<Base title="Systems notes and projects" description="Projects and interactive notes on database internals.">
+  <header class="page-heading home-heading">
+    <h1>Posts</h1>
+  </header>
 
-  <div class="home-sections">
-    {latest && (
-      <section aria-labelledby="latest-title">
-        <h2 id="latest-title">Latest post</h2>
-        <article>
-          <a class="featured-post" href={sitePath(`posts/${latest.id}/`)} aria-labelledby="featured-post-title">
-            <time datetime={latest.data.date.toISOString().slice(0, 10)}>{formatDate(latest.data.date)}</time>
-            <h3 id="featured-post-title">{latest.data.title}</h3>
-            <p>{latest.data.summary}</p>
-          </a>
-        </article>
-      </section>
-    )}
+  <PostList posts={posts.slice(0, 3)} />
 
-    <section id="projects" aria-labelledby="projects-title">
-      <h2 id="projects-title">Personal projects</h2>
-      <ul class="project-list">
-        {projects.map(project => (
-          <li><a href={project.url}>{project.name}</a></li>
-        ))}
-      </ul>
-    </section>
-  </div>
+  <section class="content-section projects" id="projects" aria-labelledby="projects-title">
+    <h2 id="projects-title">Personal projects</h2>
+    <ul class="project-links">
+      {projects.map(project => (
+        <li><a href={project.url}>{project.name}</a></li>
+      ))}
+    </ul>
+  </section>
 </Base>
 
 <style>
-  .home-title {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
+  .home-heading { margin-block: clamp(1.65rem, 4vw, 2.5rem) 1rem; }
+  .home-heading h1 { font-size: clamp(1.8rem, 4vw, 2.35rem); }
 
-  .home-sections {
-    display: grid;
-    gap: 1.45rem;
-    padding-block-start: clamp(1.35rem, 3vw, 2rem);
-  }
+  .projects { margin-block-start: 1.85rem; }
+  .projects h2 { margin-block-end: .65rem; font-size: 1rem; }
 
-  .home-sections h2 { margin: 0 0 .85rem; font-size: 1rem; font-weight: 650; }
-
-  .featured-post {
-    display: block;
-    padding: clamp(1rem, 2vw, 1.25rem);
-    border: 1px solid var(--border);
-    border-radius: .55rem;
-    background: linear-gradient(125deg, color-mix(in srgb, var(--surface), var(--accent) 5%), var(--surface) 72%);
-    text-decoration: none;
-  }
-
-  .featured-post:is(:hover, :focus-visible) { border-color: var(--control-border); }
-  .featured-post time { color: var(--muted); font: .8rem/1.4 var(--mono); }
-  .featured-post h3 { margin: .65rem 0 .5rem; font-size: clamp(1.2rem, 2.5vw, 1.5rem); font-weight: 620; }
-  .featured-post p { max-width: 54ch; margin: 0; color: var(--muted); font-size: .95rem; }
-
-  #projects { scroll-margin-block-start: 1.75rem; }
-
-  .project-list {
+  .project-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem 1.2rem;
     margin: 0;
     padding: 0;
     list-style: none;
-    border-block-start: 1px solid var(--border);
-  }
-
-  .project-list a {
-    display: block;
-    padding-block: .8rem;
-    border-block-end: 1px solid var(--border);
     font-size: .95rem;
-    text-decoration-color: var(--control-border);
   }
 
-  @media (min-width: 48rem) {
-    .home-sections {
-      grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
-      column-gap: clamp(1.65rem, 3.5vw, 2.5rem);
-    }
-  }
+  .project-links a { text-decoration-color: var(--control-border); }
 </style>
