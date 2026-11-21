@@ -17,19 +17,19 @@ import { projects } from '../site';
       <dt>Database projects involved</dt>
       <dd>
         <a href="https://aws.amazon.com/rds/aurora/">AWS Aurora</a>,
-        <a href="https://github.com/matrixorigin/matrixone">matrixone</a>
+        <a href="https://github.com/matrixorigin/matrixone">Matrix One</a>
+      </dd>
+    </div>
+
+    <div id="projects">
+      <dt>Personal projects</dt>
+      <dd>
+        {projects.map((project, index) => (
+          <Fragment>{index > 0 ? ', ' : ''}<a href={project.url}>{project.name}</a></Fragment>
+        ))}
       </dd>
     </div>
   </dl>
-
-  <section class="content-section projects" id="projects" aria-labelledby="projects-title">
-    <h2 id="projects-title">Personal projects</h2>
-    <ul class="project-links">
-      {projects.map(project => (
-        <li><a href={project.url}>{project.name}</a></li>
-      ))}
-    </ul>
-  </section>
 </Base>
 
 <style>
@@ -53,20 +53,7 @@ import { projects } from '../site';
   .about-details dd { margin: 0; }
   .about-details a { text-decoration-color: var(--control-border); }
 
-  .projects { margin-block-start: 1.85rem; }
-  .projects h2 { margin-block-end: .65rem; font-size: 1rem; }
-
-  .project-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .45rem 1.2rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: .95rem;
-  }
-
-  .project-links a { text-decoration-color: var(--control-border); }
+  #projects { scroll-margin-block-start: 1.75rem; }
 
   @media (min-width: 32rem) {
     .about-details > div { grid-template-columns: 13rem minmax(0, 1fr); }
