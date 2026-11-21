@@ -1,0 +1,26 @@
+---
+title: "Vector Search, Visualized"
+summary: "Step through HNSW search and insertion on Fashion-MNIST, then compare the search results with brute force."
+date: 2026-11-19
+topic: "Database internals"
+---
+
+import VectorSearch from '../../components/VectorSearch.astro';
+
+Each Fashion-MNIST image is a vector of 784 pixel values. The explorer indexes 6,000 images and searches them with 500 held-out queries. The map projects the vectors into two dimensions with PCA, while the searches use all 784 dimensions.
+
+## Explore HNSW
+
+Pick a query image and step through a search. Open **Full screen** to see the map, data structures, and step list together. The final step compares the index results with an exact scan. **Link to this step** reopens the same view, query, parameters, and trace frame.
+
+<VectorSearch />
+
+## HNSW
+
+HNSW builds a graph in layers. Search starts at an entry node on the top layer and walks greedily toward the query. At layer zero, a min-heap picks the next candidate and a bounded max-heap tracks the best nodes found so far. Increase **ef** to let the search consider a wider set of candidates. In **HNSW insert**, the explorer draws a level for the new node, selects its neighbors, and updates backlinks on a copy of the graph. [HNSW paper](https://arxiv.org/abs/1603.09320)
+
+## Compare with brute force
+
+**Recall@k** counts how many of the index’s top k IDs also appear in the exact top k. It measures agreement on neighbors, while **Label matches** counts returned images in the same clothing category as the query. Try **HNSW search** with query 0, k = 8, and ef = 8. Increase ef and compare recall and distance evaluations at the final step.
+
+The explorer uses Rust compiled to WebAssembly. The search ranks images by squared L2 distance. Images are from [Fashion-MNIST](https://github.com/zalandoresearch/fashion-mnist), distributed under the [MIT license](https://github.com/zalandoresearch/fashion-mnist/blob/master/LICENSE).

@@ -3,6 +3,7 @@ node_modules/
 /dist/
 /.astro/
 /public/leaf-split.wasm
+/public/vector-search.wasm
 
 # Local environment files
 .env*

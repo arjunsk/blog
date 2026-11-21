@@ -1,6 +1,6 @@
 # AutoInc
 
-A static Astro site with MDX posts and an interactive B+ tree visualization. TypeScript manages playback and the diagram, while a small Rust/WebAssembly module inserts keys and determines the split.
+A static Astro site with MDX posts and interactive database visualizations.
 
 ## Run locally
 
@@ -18,7 +18,13 @@ npm run dev
 
 - Write Markdown or MDX in `src/content/posts/`. Each post has a title, summary, date, and topic.
 - Edit the project list and external writing in `src/site.ts`.
-- Import Astro components into an MDX post to add interactive figures. See the B+ tree post for an example.
+- Import Astro components into an MDX post to add interactive figures. See the InnoDB post for an example.
+
+## Vector search explorer
+
+The article is at `/posts/vector-search-visualized/` when running `npm run dev`. The explorer runs HNSW in a Rust WASM worker. Run `npm run check:vector-search` to compare WASM with the native engine, tracing on and off, and an independent brute-force baseline.
+
+The bundled Fashion-MNIST subset contains the first 600 training and 50 test images per class, each split in its original order. The pack contains gzip-compressed 28×28 pixels, class labels, and little-endian 16-bit PCA coordinates. PCA is fitted on the training images and used for the map. The engine searches the original pixels. The dataset’s MIT license is included alongside the pack.
 
 ## Publish
 

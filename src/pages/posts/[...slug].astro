@@ -97,22 +97,58 @@ const { title, summary, date, topic } = post.data;
         </aside>
       )}
 
+      <script is:inline>
+        (() => {
+          const compact = window.matchMedia('(max-width: 68rem)');
+          const menus = document.querySelectorAll('[data-post-menu]');
+          const root = document.documentElement;
+          const lastState = new WeakMap();
+          const lifespan = 7 * 24 * 60 * 60 * 1000;
+          const key = menu => 'autoinc:sidebar:' +
+            (compact.matches ? 'mobile:' : 'desktop:') +
+            (menu.hasAttribute('data-outline') ? 'outline' : 'chapters');
+
+          function restore() {
+            delete root.dataset.railMotion;
+            for (const menu of menus) {
+              delete menu.dataset.railReveal;
+              let open = !compact.matches;
+              try {
+                const saved = JSON.parse(localStorage.getItem(key(menu)));
+                if (typeof saved?.open === 'boolean' && saved.until > Date.now()) open = saved.open;
+              } catch {
+                // The sidebars still work when storage is unavailable.
+              }
+              lastState.set(menu, open);
+              menu.open = open;
+            }
+          }
+
+          restore();
+          compact.addEventListener('change', restore);
+          for (const menu of menus) {
+            menu.querySelector('summary').addEventListener('click', () => {
+              root.dataset.railMotion = '';
+              menu.dataset.railReveal = '';
+            });
+            menu.addEventListener('toggle', () => {
+              if (lastState.get(menu) === menu.open) return;
+              lastState.set(menu, menu.open);
+              try {
+                localStorage.setItem(key(menu), JSON.stringify({ open: menu.open, until: Date.now() + lifespan }));
+              } catch {
+                // This page still keeps the current state.
+              }
+            });
+          }
+        })();
+      </script>
       <div class="prose"><Content /></div>
     </article>
   </div>
 </Base>
 
 <script>
-  const compact = window.matchMedia('(max-width: 68rem)');
-  const menus = document.querySelectorAll<HTMLDetailsElement>('details[data-post-menu]');
-
-  function setMenuDefaults() {
-    menus.forEach(menu => { menu.open = !compact.matches; });
-  }
-
-  setMenuDefaults();
-  compact.addEventListener('change', setMenuDefaults);
-
   const entries = [...document.querySelectorAll<HTMLAnchorElement>('[data-outline] a')].flatMap(link => {
     const heading = document.getElementById(decodeURIComponent(link.hash.slice(1)));
     return heading ? [{ link, heading }] : [];

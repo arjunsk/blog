@@ -6,7 +6,8 @@
     "node": ">=24"
   },
   "scripts": {
-    "build:wasm": "rustc --target wasm32-unknown-unknown --crate-type cdylib --edition 2024 -C opt-level=z -C panic=abort -C strip=symbols wasm/leaf_split.rs -o public/leaf-split.wasm",
+    "build:wasm": "rustc --target wasm32-unknown-unknown --crate-type cdylib --edition 2024 -C opt-level=z -C panic=abort -C strip=symbols wasm/leaf_split.rs -o public/leaf-split.wasm && rustc --target wasm32-unknown-unknown --crate-type cdylib --edition 2024 -C opt-level=3 -C target-feature=+simd128 -C panic=abort -C strip=symbols wasm/vector_search.rs -o public/vector-search.wasm",
+    "check:vector-search": "npm run build:wasm && node wasm/check_vector_search.mjs",
     "predev": "npm run build:wasm",
     "dev": "astro dev",
     "prebuild": "npm run build:wasm",

@@ -1,0 +1,110 @@
+---
+import { sitePath } from '../site';
+import { DEFAULTS, QUERIES } from './vector-search/engine';
+import './vector-search/explorer.css';
+
+const views = [
+  ['graph', 'HNSW graph'],
+  ['search', 'HNSW search'],
+  ['hnsw-insert', 'HNSW insert'],
+];
+const controls = [
+  { key: 'q', label: 'Query', min: 0, max: QUERIES - 1, group: 'shared' },
+  { key: 'k', label: 'k', min: 1, max: 20, group: 'query' },
+  { key: 'seed', label: 'Seed', min: 1, max: 4294967295, group: 'shared' },
+  { key: 'ef', label: 'ef', min: 1, max: 128, group: 'query' },
+  { key: 'M', label: 'M', min: 4, max: 16, group: 'shared' },
+  { key: 'efc', label: 'ef construction', min: 4, max: 128, group: 'shared' },
+] as const;
+---
+<vector-search
+  data-engine={sitePath('vector-search.wasm')}
+  data-dataset={sitePath('vector-search/fashion-mnist.pack')}
+  role="region"
+  aria-label="Vector search explorer"
+>
+  <div class="vx-header">
+    <div class="vx-tabs" role="group" aria-label="Explorer view">
+      {views.map(([id, label]) => <button type="button" data-view={id} aria-pressed={id === 'search'}>{label}</button>)}
+    </div>
+    <div class="vx-tools">
+      <button type="button" data-fullscreen aria-pressed="false">Full screen</button>
+      <details class="vx-source" data-source>
+        <summary>What runs in WASM?</summary>
+        <div class="vx-source-card">
+          <p>Rust builds the HNSW graph, performs searches and insertions, compares against brute force, and emits the trace. TypeScript manages controls, thumbnails, and the PCA map.</p>
+          <ul>
+            <li>HNSW search and insert: <code>wasm/vector_search.rs:178</code>, <code>:338</code></li>
+            <li>Brute force: <code>wasm/vector_search.rs:45</code></li>
+          </ul>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="vx-controls" aria-label="Search parameters" role="group">
+    {controls.map(({ key, label, min, max, group }) => (
+      <label data-parameter-group={group}>
+        <span>{label}</span>
+        <input type="number" data-parameter={key} value={DEFAULTS[key]} min={min} max={max} step="1" />
+      </label>
+    ))}
+  </div>
+
+  <div class="vx-transport">
+    <div class="vx-playback" role="group" aria-label="Playback">
+      <button type="button" data-prev aria-label="Previous frame">Back</button>
+      <button type="button" data-play>Play</button>
+      <button type="button" data-next aria-label="Next frame">Next</button>
+    </div>
+    <label class="vx-scrubber">
+      <span data-frame-count>Step</span>
+      <input type="range" min="0" max="0" value="0" data-scrub aria-label="Trace frame" />
+    </label>
+    <label class="vx-speed">
+      <span>Speed</span>
+      <select data-speed aria-label="Playback speed">
+        {[.1, .25, .5, 1, 2, 4, 8].map(speed => <option value={speed} selected={speed === 2}>{speed}×</option>)}
+      </select>
+    </label>
+    <div class="vx-query-strip" data-queries role="group" aria-label="Query images"></div>
+  </div>
+
+  <div class="vx-status-bar">
+    <p data-status role="status">Loading the WASM explorer and Fashion-MNIST images…</p>
+    <p data-metrics hidden></p>
+  </div>
+
+  <div class="vx-dashboard" data-dashboard hidden>
+    <section class="vx-map-section" aria-labelledby="vx-map-title">
+      <h3 id="vx-map-title">Index map <small>PCA projection</small></h3>
+      <div class="vx-map">
+        <canvas data-map role="img" aria-label="Map of the indexed images and current search state"></canvas>
+        <div class="vx-popup" data-popup hidden></div>
+        <div class="vx-results" data-results hidden></div>
+      </div>
+      <p class="vx-legend"><span>◆ Query</span><span>○ Active</span><span>● Evaluated</span><span>■ Kept</span><span>× Rejected</span></p>
+    </section>
+
+    <section class="vx-structures" aria-labelledby="vx-state-title">
+      <h3 id="vx-state-title">Trace state</h3>
+      <p class="vx-frame-title" data-frame-title></p>
+      <div class="vx-columns" data-columns></div>
+    </section>
+
+    <section class="vx-steps" aria-labelledby="vx-steps-title">
+      <h3 id="vx-steps-title">Steps</h3>
+      <ol data-steps></ol>
+    </section>
+  </div>
+
+  <div class="vx-footer">
+    <a data-share hidden>Link to this step</a>
+  </div>
+  <noscript><p>Enable JavaScript to run the interactive explorer.</p></noscript>
+</vector-search>
+
+<script>
+  import { VectorSearch } from './vector-search/explorer';
+  customElements.define('vector-search', VectorSearch);
+</script>
