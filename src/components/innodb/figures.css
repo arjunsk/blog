@@ -1,4 +1,14 @@
 .innodb-figure {
+  color-scheme: dark;
+  --page: #191818;
+  --surface: #211f1e;
+  --raised: #2a2725;
+  --text: #f5f1ec;
+  --muted: #baafa6;
+  --border: #393430;
+  --control-border: #776b61;
+  --accent: #bcd8ff;
+  --accent-ink: #111a28;
   --bg: var(--page);
   --panel: var(--page);
   --panel-2: var(--raised);
@@ -14,6 +24,7 @@
   --warn: #efd28c;
   --err: #ffa5ad;
   --orange: #f3b47d;
+  color: var(--text);
   container-type: inline-size;
   min-width: 0;
   margin: 1rem 0 2.5rem;
@@ -23,11 +34,18 @@
   border-radius: .5rem;
 }
 
+.figure-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .45rem 1rem;
+  margin-bottom: .75rem;
+}
+
 .innodb-figure .controls {
   display: flex;
   flex-wrap: wrap;
   gap: .45rem;
-  margin-bottom: .75rem;
 }
 
 .innodb-figure .btn, .innodb-figure input {
@@ -54,9 +72,29 @@
   border-radius: .35rem;
 }
 
-.innodb-figure svg { display: block; width: 100%; height: auto; min-width: 36rem; }
-.innodb-figure--btree svg { min-width: max(27rem, var(--tree-min-width, 0px)); }
-.innodb-figure--doublewrite svg { min-width: 40rem; }
+.diagram-zoom {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .35rem;
+  margin-inline-start: auto;
+}
+
+.diagram-zoom .btn { min-width: 2.25rem; padding-inline: .45rem; }
+.diagram-zoom output {
+  min-width: 3.25rem;
+  color: var(--muted);
+  text-align: center;
+  font-size: .8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.innodb-figure .viz-container > svg {
+  display: block;
+  width: var(--diagram-width, 100%);
+  height: auto;
+  margin-inline: auto;
+}
 
 .innodb-figure svg { fill: var(--text); }
 .innodb-figure svg text { font-family: var(--mono); }

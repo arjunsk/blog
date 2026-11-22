@@ -34,3 +34,13 @@ export function formatDate(date: Date) {
     year: 'numeric',
   }).format(date);
 }
+
+const shortDate = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' });
+
+export function formatShortDate(date: Date) {
+  return shortDate.format(date);
+}
+
+export function topicAnchor(topic: string) {
+  return `topic-${topic.toLowerCase().trim().replace(/\s+/g, '-')}`;
+}

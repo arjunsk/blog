@@ -93,15 +93,13 @@
 }
 
 .rail-list a[aria-current] {
-  background: var(--surface);
+  background: var(--accent-wash);
   color: var(--accent);
 }
 
 .outline-subheading { padding-inline-start: .75rem; }
 
 @media (min-width: 68.001rem) {
-  .shell.wide-shell { width: min(100% - 3.5rem, 78rem); }
-
   main.shell.wide-shell {
     --open-rail-gutter: max(1.75rem, 50% - 39rem);
     --folded-rail-gutter: .5rem;
@@ -155,17 +153,13 @@
     scrollbar-width: thin;
   }
 
-  .chapter-rail { padding-inline-end: .85rem; border-inline-end: 1px solid var(--border); }
+  .outline-rail { grid-area: 1 / 2 / 3 / 3; }
 
-  .outline-rail {
-    grid-area: 1 / 2 / 3 / 3;
-    padding-inline-start: .85rem;
-    border-inline-start: 1px solid var(--border);
-  }
-
-  :is(.chapter-rail, .outline-rail):has(> .rail-panel:not([open])) {
-    padding-inline: 0;
-    border-inline: 0;
+  :is(.chapter-rail, .outline-rail):has(> .rail-panel[open]) {
+    padding: .8rem;
+    border: 1px solid var(--border);
+    border-radius: .6rem;
+    background: var(--surface);
   }
 
   .chapter-rail .rail-title {

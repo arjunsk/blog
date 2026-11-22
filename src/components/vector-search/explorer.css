@@ -1,4 +1,6 @@
 vector-search {
+  color-scheme: dark;
+  --accent: #f4b17d;
   --vx-bg: #121925;
   --vx-panel: #181f2c;
   --vx-line: #344253;

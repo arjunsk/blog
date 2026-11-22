@@ -1,0 +1,43 @@
+---
+import Base from '../layouts/Base.astro';
+import { formatShortDate, getVisiblePosts, sitePath, topicAnchor } from '../site';
+
+const posts = (await getVisiblePosts()).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const topics = [...new Set(posts.map(post => post.data.topic))].sort();
+---
+<Base title="Tags" description="Browse AutoInc posts by topic." section="tags">
+  <header class="page-heading"><h1>Tags</h1></header>
+  <nav class="tag-links" aria-label="Post tags">
+    {topics.map(topic => <a class="post-topic" href={`#${topicAnchor(topic)}`}>{topic}</a>)}
+  </nav>
+
+  {topics.map(topic => (
+    <section class="tag-section" id={topicAnchor(topic)}>
+      <h2>{topic}</h2>
+      <ul>
+        {posts.filter(post => post.data.topic === topic).map(({ id, data }) => (
+          <li>
+            <time datetime={data.date.toISOString().slice(0, 10)}>{formatShortDate(data.date)}</time>
+            <a href={sitePath(`posts/${id}/`)}>{data.title}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</Base>
+
+<style>
+  .tag-links { display: flex; flex-wrap: wrap; gap: .5rem; font-size: .875rem; }
+  .tag-section { margin-block: 2rem; scroll-margin-block-start: 1.5rem; }
+  .tag-section h2 { margin: 0 0 .5rem; font-size: 1.125rem; }
+  .tag-section ul { margin: 0; padding: 0; list-style: none; }
+  .tag-section li {
+    display: grid;
+    grid-template-columns: 4.25rem minmax(0, 1fr);
+    gap: .75rem;
+    align-items: baseline;
+    padding: .7rem 0;
+    border-block-start: 1px solid var(--border);
+  }
+  .tag-section time { color: var(--muted); font-size: .8rem; }
+</style>

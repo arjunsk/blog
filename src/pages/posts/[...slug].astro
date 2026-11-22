@@ -1,7 +1,7 @@
 ---
 import { render, type CollectionEntry } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import { formatDate, getVisiblePosts, sitePath } from '../../site';
+import { formatDate, getVisiblePosts, sitePath, topicAnchor } from '../../site';
 import '../../styles/post-navigation.css';
 
 interface ChapterGroup {
@@ -72,8 +72,11 @@ const { title, summary, date, topic } = post.data;
     <article class:list={['post-content', { 'with-outline': outline.length > 0 }]}>
       <header class="post-header">
         <a class="back-link" href={sitePath('posts/')}>All posts</a>
-        <p class="eyebrow">{topic} · <time datetime={date.toISOString().slice(0, 10)}>{formatDate(date)}</time></p>
         <h1>{title}</h1>
+        <p class="post-meta">
+          <time datetime={date.toISOString().slice(0, 10)}>{formatDate(date)}</time>
+          <a class="post-topic" href={sitePath(`tags/#${topicAnchor(topic)}`)}>{topic}</a>
+        </p>
         <p class="post-deck">{summary}</p>
       </header>
 

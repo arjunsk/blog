@@ -1,21 +1,81 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { formatDate, sitePath } from '../site';
+import { formatDate, formatShortDate, sitePath } from '../site';
 
 interface Props {
   posts: CollectionEntry<'posts'>[];
 }
 
 const { posts } = Astro.props;
+const groups = new Map<number, typeof posts>();
+for (const post of posts) {
+  const year = post.data.date.getUTCFullYear();
+  const group = groups.get(year);
+  if (group) group.push(post);
+  else groups.set(year, [post]);
+}
 ---
-<div class="reading-list">
-  {posts.map(({ id, data }) => (
-    <article class="reading-row">
-      <div>
-        <h2><a href={sitePath(`posts/${id}/`)}>{data.title}</a></h2>
-        <p>{data.summary}</p>
-      </div>
-      <time datetime={data.date.toISOString().slice(0, 10)}>{formatDate(data.date)}</time>
-    </article>
-  ))}
-</div>
+{[...groups].map(([year, entries]) => (
+  <section class="archive-year" aria-labelledby={`archive-${year}`}>
+    <h2 id={`archive-${year}`}>{year}</h2>
+    <ul class="archive-list">
+      {entries.map(({ id, data }) => (
+        <li class="archive-row">
+          <time datetime={data.date.toISOString().slice(0, 10)} aria-label={formatDate(data.date)}>{formatShortDate(data.date)}</time>
+          <div>
+            <h3><a href={sitePath(`posts/${id}/`)}>{data.title}</a></h3>
+            <p>{data.summary}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
+))}
+
+<style>
+  .archive-year + .archive-year { margin-block-start: 2.5rem; }
+
+  .archive-year h2 {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    margin: 0;
+    color: var(--accent);
+    font-size: 1.1rem;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .archive-year h2::after {
+    content: '';
+    flex: 1;
+    border-block-start: 1px solid var(--border);
+  }
+
+  .archive-list { list-style: none; padding: 0; margin: .5rem 0 0; }
+
+  .archive-row {
+    display: grid;
+    grid-template-columns: 4.25rem minmax(0, 1fr);
+    gap: .75rem;
+    align-items: baseline;
+    padding: .95rem 0;
+    border-block-end: 1px solid var(--border);
+  }
+
+  .archive-row time {
+    color: var(--muted);
+    font-size: .8rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .archive-row h3 { margin: 0; font-size: 1rem; font-weight: 650; }
+  .archive-row a { text-decoration: none; }
+  .archive-row a:is(:hover, :focus-visible) { text-decoration: underline; }
+  .archive-row p { margin: .25rem 0 0; color: var(--muted); font-size: .875rem; }
+
+  @media (max-width: 32rem) {
+    .archive-row { grid-template-columns: 3.55rem minmax(0, 1fr); gap: .65rem; }
+  }
+</style>

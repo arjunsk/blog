@@ -142,7 +142,6 @@ export function mountBtree(section) {
 
     // ===== Adapt the viewBox height to the depth + linked-list band =====
     const VB_H = PAD_TOP + (levels.length - 1) * LEVEL_GAP + NODE_H + LEAF_LINK_DIP + PAD_BOTTOM;
-    section.style.setProperty('--tree-min-width', `${Math.round(VB_W * .7)}px`);
     svg.attr('viewBox', `0 0 ${VB_W} ${VB_H}`);
 
     // ===== Position nodes (centers in _cx,_cy) =====

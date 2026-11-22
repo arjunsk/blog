@@ -1,11 +1,12 @@
 ---
 import '../styles/global.css';
+import SiteTools from '../components/SiteTools.astro';
 import { siteName, sitePath } from '../site';
 
 interface Props {
   title: string;
   description: string;
-  section?: 'blog' | 'about';
+  section?: 'home' | 'blog' | 'tags' | 'about';
   wide?: boolean;
 }
 
@@ -18,8 +19,17 @@ const pageTitle = `${title} — ${siteName}`;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#111214" />
+    <meta name="color-scheme" content="dark light" />
+    <script is:inline>
+      (() => {
+        let mode;
+        try { mode = localStorage.getItem('autoinc:appearance'); } catch {}
+        if (mode !== 'light' && mode !== 'system') mode = 'dark';
+        const root = document.documentElement;
+        root.dataset.appearance = mode;
+        root.dataset.theme = mode === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : mode;
+      })();
+    </script>
     <meta name="description" content={description} />
     <meta property="og:site_name" content={siteName} />
     <meta property="og:title" content={pageTitle} />
@@ -31,18 +41,26 @@ const pageTitle = `${title} — ${siteName}`;
   </head>
   <body>
     <a href="#content" class="skip">Skip to content</a>
-    <header class:list={['shell', 'site-header', { 'wide-shell': wide }]}>
-      <a class="brand" href={sitePath()} aria-label={`${siteName}, home`}>
-        <img src={sitePath('autoinc.svg')} alt="" width="79" height="34" />
-      </a>
-      <nav aria-label="Main navigation">
-        <a href={sitePath('posts/')} aria-current={section === 'blog' ? 'page' : undefined}>Blog</a>
-        <a href={sitePath('about/')} aria-current={section === 'about' ? 'page' : undefined}>About</a>
-        <a href="https://github.com/arjunsk">GitHub</a>
-      </nav>
+    <header class="site-header">
+      <div class="site-header-inner">
+        <a class="brand" href={sitePath()} aria-label={`${siteName}, home`}>
+          <img src={sitePath('autoinc.svg')} alt="" width="79" height="34" />
+        </a>
+        <nav aria-label="Main navigation">
+          <a href={sitePath()} aria-current={section === 'home' ? 'page' : undefined}>Home</a>
+          <a href={sitePath('posts/')} aria-current={section === 'blog' ? 'page' : undefined}>Blog</a>
+          <a href={sitePath('tags/')} aria-current={section === 'tags' ? 'page' : undefined}>Tags</a>
+          <a href={sitePath('about/')} aria-current={section === 'about' ? 'page' : undefined}>About</a>
+        </nav>
+        <SiteTools />
+      </div>
     </header>
     <main id="content" class:list={['shell', { 'wide-shell': wide }]}>
       <slot />
     </main>
+    <footer class="site-footer">
+      <p>AutoInc <span aria-hidden="true">·</span> <a href="https://github.com/Secd0g/zen">Zen</a></p>
+      <a href="https://github.com/arjunsk">GitHub</a>
+    </footer>
   </body>
 </html>

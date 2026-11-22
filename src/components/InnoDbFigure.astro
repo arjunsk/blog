@@ -15,8 +15,8 @@ const labels: Record<Kind, string> = {
 const title = labels[kind];
 ---
 <figure class:list={['innodb-figure', `innodb-figure--${kind}`]} aria-label={title} data-innodb-figure={kind}>
-  {kind === 'btree' && (
-    <>
+  <div class="figure-toolbar">
+    {kind === 'btree' && (
       <div class="controls" role="group" aria-label="Insert keys">
         <input type="number" step="1" placeholder="Key" aria-label="Key to insert" data-key />
         <button type="button" class="btn primary" data-act="insert">Insert</button>
@@ -24,15 +24,9 @@ const title = labels[kind];
         <button type="button" class="btn" data-act="insert20">Insert 20 random</button>
         <button type="button" class="btn" data-act="reset">Reset</button>
       </div>
-      <div class="viz-container" tabindex="0" role="group" aria-label="Scrollable B+ tree diagram">
-        <svg data-diagram viewBox="0 0 640 124" role="img" aria-label="Clustered index and its leaf pages"></svg>
-      </div>
-      <p class="inspector" data-status aria-live="polite">The starting leaf contains 20, 35, and 50.</p>
-    </>
-  )}
+    )}
 
-  {kind === 'update' && (
-    <>
+    {kind === 'update' && (
       <div class="controls" role="group" aria-label="Run a transaction">
         <button type="button" class="btn primary" data-act="begin">BEGIN</button>
         <button type="button" class="btn" data-act="insert">INSERT</button>
@@ -40,12 +34,26 @@ const title = labels[kind];
         <button type="button" class="btn" data-act="commit">COMMIT</button>
         <button type="button" class="btn" data-act="reset">Reset</button>
       </div>
-      <div class="viz-container" tabindex="0" role="group" aria-label="Scrollable transaction diagram">
-        <svg data-diagram viewBox="0 0 960 700" role="img" aria-label="Buffer pool, redo log, and undo records"></svg>
-      </div>
-      <p class="inspector" data-status aria-live="polite">Press <strong>BEGIN</strong> to start the transaction.</p>
-    </>
-  )}
+    )}
+
+    <div class="diagram-zoom" role="group" aria-label="Diagram zoom">
+      <button type="button" class="btn" data-zoom-out aria-label="Zoom out diagram">−</button>
+      <output data-zoom-level aria-label="Diagram width relative to the viewing area">100%</output>
+      <button type="button" class="btn" data-zoom-in aria-label="Zoom in diagram">+</button>
+      <button type="button" class="btn" data-zoom-fit aria-label="Fit diagram to viewing area">Fit</button>
+    </div>
+  </div>
+  <div class="viz-container" tabindex="0" role="group" aria-label={kind === 'btree' ? 'Scrollable B+ tree diagram' : 'Scrollable transaction diagram'}>
+    <svg
+      data-diagram
+      viewBox={kind === 'btree' ? '0 0 640 124' : '0 0 960 700'}
+      role="img"
+      aria-label={kind === 'btree' ? 'Clustered index and its leaf pages' : 'Buffer pool, redo log, and undo records'}
+    ></svg>
+  </div>
+  <p class="inspector" data-status aria-live="polite">
+    {kind === 'btree' ? 'The starting leaf contains 20, 35, and 50.' : <>Press <strong>BEGIN</strong> to start the transaction.</>}
+  </p>
 
   <noscript><p>Enable JavaScript to run this simulation.</p></noscript>
 </figure>
@@ -54,6 +62,35 @@ const title = labels[kind];
   import { mountBtree } from './innodb/btree.js';
   import { mountUpdate } from './innodb/update-flow.js';
 
-  document.querySelectorAll<HTMLElement>('[data-innodb-figure="btree"]').forEach(mountBtree);
-  document.querySelectorAll<HTMLElement>('[data-innodb-figure="update"]').forEach(mountUpdate);
+  for (const figure of document.querySelectorAll<HTMLElement>('[data-innodb-figure]')) {
+    if (figure.dataset.innodbFigure === 'btree') mountBtree(figure);
+    else mountUpdate(figure);
+
+    const viewport = figure.querySelector<HTMLElement>('.viz-container')!;
+    const zoomOut = figure.querySelector<HTMLButtonElement>('[data-zoom-out]')!;
+    const zoomIn = figure.querySelector<HTMLButtonElement>('[data-zoom-in]')!;
+    const fit = figure.querySelector<HTMLButtonElement>('[data-zoom-fit]')!;
+    const label = figure.querySelector<HTMLOutputElement>('[data-zoom-level]')!;
+    const levels = [50, 75, 100, 125, 150, 200, 250, 300, 400];
+    const fitIndex = levels.indexOf(100);
+    let index = fitIndex;
+
+    function setZoom(next: number) {
+      const previousWidth = viewport.scrollWidth;
+      const relativeCenter = (viewport.scrollLeft + viewport.clientWidth / 2) / previousWidth;
+      index = next;
+      const percentage = `${levels[index]}%`;
+      viewport.style.setProperty('--diagram-width', percentage);
+      viewport.scrollLeft = index === fitIndex
+        ? 0
+        : relativeCenter * viewport.scrollWidth - viewport.clientWidth / 2;
+      label.value = percentage;
+      zoomOut.disabled = index === 0;
+      zoomIn.disabled = index === levels.length - 1;
+    }
+
+    zoomOut.addEventListener('click', () => setZoom(index - 1));
+    zoomIn.addEventListener('click', () => setZoom(index + 1));
+    fit.addEventListener('click', () => setZoom(fitIndex));
+  }
 </script>

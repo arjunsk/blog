@@ -1,0 +1,187 @@
+---
+import { getVisiblePosts, sitePath } from '../site';
+
+const posts = (await getVisiblePosts()).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+<div class="site-tools">
+  <button class="search-trigger" type="button" data-search-open aria-label="Search posts" aria-haspopup="dialog">
+    <span class="search-icon" aria-hidden="true"></span>
+    <span class="search-label">Search</span>
+    <kbd aria-hidden="true">⌘ K</kbd>
+  </button>
+  <details class="appearance">
+    <summary aria-label="Appearance" title="Appearance">
+      <span class="moon-icon" aria-hidden="true">☾</span><span class="sun-icon" aria-hidden="true">☀</span>
+    </summary>
+    <div class="appearance-menu" role="group" aria-label="Color theme">
+      <button type="button" data-theme-choice="light">Light</button>
+      <button type="button" data-theme-choice="dark">Dark</button>
+      <button type="button" data-theme-choice="system">System</button>
+    </div>
+  </details>
+</div>
+
+<dialog class="site-search" data-search aria-labelledby="search-title">
+  <header>
+    <h2 id="search-title">Search posts</h2>
+    <form method="dialog"><button type="submit" aria-label="Close search">×</button></form>
+  </header>
+  <input type="search" data-search-input aria-label="Search posts" placeholder="Search by title, topic, or summary" autocomplete="off" />
+  <p data-no-results role="status" hidden>No matching posts.</p>
+  <ul>
+    {posts.map(({ id, data }) => (
+      <li data-search-item={`${data.title} ${data.topic} ${data.summary}`.toLocaleLowerCase('en')}>
+        <a href={sitePath(`posts/${id}/`)}>
+          <strong>{data.title}</strong>
+          <span>{data.summary}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('[data-search]')!;
+  const trigger = document.querySelector<HTMLButtonElement>('[data-search-open]')!;
+  const input = dialog.querySelector<HTMLInputElement>('[data-search-input]')!;
+  const items = [...dialog.querySelectorAll<HTMLElement>('[data-search-item]')];
+  const empty = dialog.querySelector<HTMLElement>('[data-no-results]')!;
+  const choices = [...document.querySelectorAll<HTMLButtonElement>('[data-theme-choice]')];
+  const root = document.documentElement;
+  const system = matchMedia('(prefers-color-scheme: light)');
+  const appearance = document.querySelector<HTMLDetailsElement>('.appearance')!;
+
+  function openSearch() {
+    if (dialog.open) return;
+    dialog.showModal();
+    input.focus();
+  }
+
+  trigger.addEventListener('click', openSearch);
+  dialog.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      dialog.close();
+    }
+  });
+  document.addEventListener('keydown', event => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      event.preventDefault();
+      openSearch();
+    }
+  });
+  input.addEventListener('input', () => {
+    const query = input.value.trim().toLocaleLowerCase('en').split(/\s+/);
+    for (const item of items) {
+      item.hidden = !query.every(term => item.dataset.searchItem!.includes(term));
+    }
+    empty.hidden = items.some(item => !item.hidden);
+  });
+
+  function updateTheme(mode: string) {
+    root.dataset.appearance = mode;
+    root.dataset.theme = mode === 'system' ? (system.matches ? 'light' : 'dark') : mode;
+    for (const choice of choices) choice.setAttribute('aria-pressed', String(choice.dataset.themeChoice === mode));
+  }
+
+  updateTheme(root.dataset.appearance ?? 'dark');
+  for (const choice of choices) {
+    choice.addEventListener('click', () => {
+      const mode = choice.dataset.themeChoice!;
+      updateTheme(mode);
+      try { localStorage.setItem('autoinc:appearance', mode); } catch {}
+      appearance.open = false;
+      appearance.querySelector('summary')?.focus();
+    });
+  }
+  system.addEventListener('change', () => {
+    if (root.dataset.appearance === 'system') updateTheme('system');
+  });
+  document.addEventListener('click', event => {
+    if (event.target instanceof Node && !appearance.contains(event.target)) appearance.open = false;
+  });
+</script>
+
+<style>
+  .site-tools { display: flex; align-items: center; gap: .55rem; justify-self: end; }
+  .search-trigger, .appearance summary, .site-search button, .appearance-menu button {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--muted);
+    border: 1px solid transparent;
+    border-radius: .3rem;
+    background: transparent;
+    cursor: pointer;
+  }
+  .search-trigger { border-color: var(--border); padding: .44rem .65rem; font-size: .82rem; }
+  .search-icon {
+    position: relative;
+    width: .76rem;
+    height: .76rem;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    margin-inline-end: .15rem;
+  }
+  .search-icon::after {
+    content: '';
+    position: absolute;
+    top: 88%;
+    inset-inline-start: 85%;
+    width: .28rem;
+    border-top: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    transform-origin: left;
+  }
+  kbd { padding: .05rem .24rem; border: 1px solid var(--border); border-radius: .15rem; background: var(--surface); font-size: .68rem; }
+  .appearance { position: relative; }
+  .appearance summary { font-size: 1.28rem; list-style: none; padding: .1rem .38rem; }
+  .appearance summary::-webkit-details-marker { display: none; }
+  .sun-icon, :global([data-theme="light"]) .moon-icon { display: none; }
+  :global([data-theme="light"]) .sun-icon { display: inline; }
+  .appearance-menu {
+    position: absolute;
+    z-index: 3;
+    inset-inline-end: 0;
+    margin-top: .4rem;
+    min-width: 6.5rem;
+    border: 1px solid var(--border);
+    border-radius: .45rem;
+    padding: .3rem;
+    background: var(--surface);
+  }
+  .appearance-menu button { display: block; width: 100%; text-align: start; padding: .32rem .55rem; }
+  .appearance-menu button[aria-pressed="true"], .appearance-menu button:hover { color: var(--accent); background: var(--accent-wash); }
+  .search-trigger:hover, .appearance summary:hover, .site-search button:hover { color: var(--text); }
+
+  .site-search {
+    width: min(calc(100% - 2rem), 35rem);
+    padding: 1.2rem;
+    border: 1px solid var(--control-border);
+    border-radius: .7rem;
+    color: var(--text);
+    background: var(--surface);
+  }
+  .site-search::backdrop { background: #15131bb3; }
+  .site-search header { display: flex; justify-content: space-between; align-items: center; }
+  .site-search h2 { margin: 0; font-size: 1.15rem; }
+  .site-search button { font-size: 1.3rem; }
+  .site-search input {
+    width: 100%;
+    margin-block: .8rem .5rem;
+    padding: .6rem .7rem;
+    border: 1px solid var(--control-border);
+    border-radius: .3rem;
+    background: var(--page);
+    color: var(--text);
+  }
+  .site-search ul { list-style: none; margin: 0; padding: 0; }
+  .site-search li a { display: block; border-block-end: 1px solid var(--border); padding: .65rem 0; text-decoration: none; }
+  .site-search li span { display: block; color: var(--muted); font-size: .82rem; margin-top: .15rem; }
+  .site-search li:last-child a { border-block-end: 0; }
+
+  @media (max-width: 44rem) {
+    .search-label, kbd { display: none; }
+    .search-trigger { min-height: 1.9rem; }
+  }
+</style>
